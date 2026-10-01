@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -16,7 +17,7 @@ class MemoryUpdate(BaseModel):
     content: str | None = Field(default=None, min_length=1)
     confidence: float | None = Field(default=None, ge=0, le=1)
     importance: float | None = Field(default=None, ge=0, le=1)
-    status: str | None = Field(default=None, min_length=2, max_length=32)
+    status: Literal["ACTIVE", "SUPERSEDED", "REJECTED", "PENDING_REVIEW"] | None = None
     provenance_json: dict | None = None
     reviewed_by: str | None = Field(default=None, min_length=2, max_length=64)
     decision: str | None = Field(default=None, min_length=2, max_length=64)

@@ -8,6 +8,7 @@ from app.services.memory_quality_service import (
     append_duplicate_suppression_event,
     build_decision_provenance,
     find_active_duplicate_memory,
+    validate_status_transition,
 )
 
 REVIEW_THRESHOLD = 0.80
@@ -18,6 +19,13 @@ def list_memories(db: Session, user_id: str, status: str | None = None) -> list[
     if status:
         query = query.where(Memory.status == status)
     return list(db.scalars(query.order_by(Memory.updated_at.desc())))
+
+
+def get_memory(db: Session, user_id: str, memory_id: int) -> Memory | None:
+    memory = db.get(Memory, memory_id)
+    if not memory or memory.user_id != user_id:
+        return None
+    return memory
 
 
 def create_memory(db: Session, user_id: str, payload: MemoryCreate) -> Memory:
@@ -70,6 +78,11 @@ def update_memory(db: Session, memory: Memory, payload: MemoryUpdate) -> Memory:
     decision = update_values.pop("decision", None)
     decision_reason = update_values.pop("decision_reason", None)
     provenance_json = update_values.pop("provenance_json", None)
+    target_status = update_values.get("status")
+    status_changed = target_status is not None and target_status != memory.status
+
+    if target_status is not None:
+        validate_status_transition(current_status=memory.status, new_status=target_status)
 
     for key, value in update_values.items():
         setattr(memory, key, value)
@@ -77,7 +90,7 @@ def update_memory(db: Session, memory: Memory, payload: MemoryUpdate) -> Memory:
     if provenance_json is not None:
         memory.provenance_json = provenance_json
 
-    if "status" in update_values or reviewed_by is not None or decision is not None or decision_reason is not None:
+    if status_changed or reviewed_by is not None or decision is not None or decision_reason is not None:
         memory.provenance_json = build_decision_provenance(
             base_provenance=memory.provenance_json,
             decision=decision or "manual_override",
@@ -92,7 +105,35 @@ def update_memory(db: Session, memory: Memory, payload: MemoryUpdate) -> Memory:
 
 
 def list_review_queue(db: Session, user_id: str) -> list[Memory]:
-    return list_memories(db=db, user_id=user_id, status="PENDING_REVIEW")
+    return list_review_queue_with_filters(db=db, user_id=user_id)
+
+
+def list_review_queue_with_filters(
+    db: Session,
+    user_id: str,
+    status: str | None = "PENDING_REVIEW",
+    memory_type: str | None = None,
+    sort_by: str = "updated_at",
+    order: str = "desc",
+) -> list[Memory]:
+    sort_column_lookup = {
+        "created_at": Memory.created_at,
+        "updated_at": Memory.updated_at,
+        "confidence": Memory.confidence,
+        "importance": Memory.importance,
+    }
+    query = select(Memory).where(Memory.user_id == user_id)
+    if status is not None:
+        query = query.where(Memory.status == status)
+    if memory_type is not None:
+        query = query.where(Memory.type == memory_type)
+
+    sort_column = sort_column_lookup[sort_by]
+    if order == "asc":
+        query = query.order_by(sort_column.asc())
+    else:
+        query = query.order_by(sort_column.desc())
+    return list(db.scalars(query))
 
 
 def review_memory(db: Session, memory: Memory, payload: MemoryReviewRequest, user_id: str) -> Memory:
@@ -100,7 +141,9 @@ def review_memory(db: Session, memory: Memory, payload: MemoryReviewRequest, use
         raise ValueError("Only PENDING_REVIEW memories can be reviewed")
 
     decision_to_status = {"approve": "ACTIVE", "reject": "REJECTED"}
-    memory.status = decision_to_status[payload.decision]
+    target_status = decision_to_status[payload.decision]
+    validate_status_transition(current_status=memory.status, new_status=target_status)
+    memory.status = target_status
     memory.provenance_json = build_decision_provenance(
         base_provenance=memory.provenance_json,
         decision=payload.decision,

@@ -6,6 +6,14 @@ from sqlalchemy.orm import Session
 
 from app.models.memory import Memory
 
+VALID_MEMORY_STATUSES = {"ACTIVE", "SUPERSEDED", "REJECTED", "PENDING_REVIEW"}
+ALLOWED_STATUS_TRANSITIONS: dict[str, set[str]] = {
+    "PENDING_REVIEW": {"ACTIVE", "REJECTED"},
+    "ACTIVE": {"SUPERSEDED", "REJECTED"},
+    "SUPERSEDED": {"ACTIVE", "REJECTED"},
+    "REJECTED": set(),
+}
+
 
 def normalize_memory_content(content: str) -> str:
     return re.sub(r"\s+", " ", content.strip().lower())
@@ -63,3 +71,16 @@ def append_duplicate_suppression_event(
     provenance["duplicate_suppressed_events"] = events
     provenance["duplicate_suppressed_count"] = len(events)
     memory.provenance_json = provenance
+
+
+def validate_status_transition(current_status: str, new_status: str) -> None:
+    if current_status not in VALID_MEMORY_STATUSES:
+        raise ValueError(f"Invalid current memory status: {current_status}")
+    if new_status not in VALID_MEMORY_STATUSES:
+        raise ValueError(f"Invalid target memory status: {new_status}")
+    if current_status == new_status:
+        return
+
+    allowed_targets = ALLOWED_STATUS_TRANSITIONS[current_status]
+    if new_status not in allowed_targets:
+        raise ValueError(f"Invalid status transition: {current_status} -> {new_status}")

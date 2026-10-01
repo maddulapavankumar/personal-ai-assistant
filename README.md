@@ -79,6 +79,11 @@ Memory quality controls:
 - duplicate extracted memories are deterministically suppressed (same user + type + normalized content)
 - `GET /api/v1/memories?status=ACTIVE|SUPERSEDED|REJECTED` can filter by status
 
+Deterministic chat reminder command:
+
+- `remind me to <title> at <ISO-8601 datetime>`
+- Example: `remind me to pay rent at 2026-10-05T09:00:00Z`
+
 ## Recommended milestone flow (Copilot Agents)
 
 Use a strict 3-role flow per milestone:
@@ -108,12 +113,15 @@ After pushing, configure branch protection for `main` per:
 
 - Milestone 1 Step 2 (deterministic extraction): merged to `main` via PR #1.
 - Milestone 1 Step 3 (tool routing controls): merged to `main` via PR #2.
+- Milestone 1 Step 4 (memory quality controls): merged to `main` via PR #3.
+- Milestone 1 Step 5 (chat reminder command): open as PR #4.
 
 Recommended immediate sequence:
 
-1. Start the next milestone branch from updated `main`.
+1. Merge PR #4 when checks and review are green.
 2. Keep the next slice small and testable.
-3. Start the next slice with Planner -> Builder -> Reviewer flow.
+3. Start the next milestone branch from updated `main`.
+4. Start the next slice with Planner -> Builder -> Reviewer flow.
 
 ## First implementation milestone (approved target)
 

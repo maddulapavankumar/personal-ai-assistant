@@ -80,6 +80,19 @@ Use a strict 3-role flow per milestone:
 Detailed prompts and guardrails are in:
 
 - [docs/agent-workflow.md](./docs/agent-workflow.md)
+- [docs/github-review-setup.md](./docs/github-review-setup.md)
+
+## GitHub quality gates
+
+This repository includes:
+
+- CI workflow: [.github/workflows/backend-ci.yml](./.github/workflows/backend-ci.yml)
+- PR template: [.github/pull_request_template.md](./.github/pull_request_template.md)
+- Code owners: [.github/CODEOWNERS](./.github/CODEOWNERS)
+
+After pushing, configure branch protection for `main` per:
+
+- [docs/github-review-setup.md](./docs/github-review-setup.md)
 
 ## First implementation milestone (approved target)
 

@@ -29,6 +29,7 @@ def test_chat_extracts_fact_memory(client):
     memories = memories_response.json()
     assert len(memories) == 1
     assert memories[0]["type"] == "FACT"
+    assert memories[0]["status"] == "PENDING_REVIEW"
     assert memories[0]["provenance_json"]["rule_id"] == "fact_ownership_statement"
 
 
@@ -73,5 +74,6 @@ def test_chat_suppresses_duplicate_extracted_memories(client):
     memories = memories_response.json()
     assert len(memories) == 1
     memory = memories[0]
+    assert memory["status"] == "PENDING_REVIEW"
     assert memory["provenance_json"]["duplicate_suppressed_count"] == 1
     assert len(memory["provenance_json"]["duplicate_suppressed_events"]) == 1

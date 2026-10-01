@@ -37,3 +37,8 @@ class MemoryOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class MemoryReviewRequest(BaseModel):
+    decision: str = Field(pattern="^(approve|reject)$")
+    reason: str = Field(min_length=3, max_length=255)

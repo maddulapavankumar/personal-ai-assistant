@@ -18,14 +18,14 @@ def find_active_duplicate_memory(
     content: str,
 ) -> Memory | None:
     normalized_candidate = normalize_memory_content(content)
-    active_memories = db.scalars(
+    candidate_memories = db.scalars(
         select(Memory).where(
             Memory.user_id == user_id,
             Memory.type == memory_type,
-            Memory.status == "ACTIVE",
+            Memory.status.in_(["ACTIVE", "PENDING_REVIEW"]),
         )
     )
-    for memory in active_memories:
+    for memory in candidate_memories:
         if normalize_memory_content(memory.content) == normalized_candidate:
             return memory
     return None
@@ -63,4 +63,3 @@ def append_duplicate_suppression_event(
     provenance["duplicate_suppressed_events"] = events
     provenance["duplicate_suppressed_count"] = len(events)
     memory.provenance_json = provenance
-

@@ -86,7 +86,12 @@ Memory quality controls:
 Deterministic chat reminder command:
 
 - `remind me to <title> at <ISO-8601 datetime>`
+- `update reminder <id> title <text> at <ISO-8601 datetime>`
+- `cancel reminder <id>`
 - Example: `remind me to pay rent at 2026-10-05T09:00:00Z`
+- Example: `update reminder 12 title pay internet bill at 2026-10-06T08:30:00Z`
+- Example: `cancel reminder 12`
+- reminder audit events are appended for create/update/cancel with deterministic status (`executed`, `ignored`, `invalid`)
 
 ## Recommended milestone flow (Copilot Agents)
 

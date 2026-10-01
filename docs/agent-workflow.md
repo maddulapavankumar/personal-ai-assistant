@@ -87,3 +87,17 @@ Do not broaden scope.
 4. Fixes
 5. Milestone sign-off
 
+## PR and handoff checklist
+
+Before requesting merge:
+
+1. Ensure PR template fields are fully filled (no placeholder comments left).
+2. Include exact validation commands and outcomes (pass/fail).
+3. Resolve all selected review comments and re-run targeted tests.
+4. Confirm CI checks are green.
+
+When using stacked milestone branches:
+
+- Create `step-(n+1)` from `step-n` branch.
+- Open PR with base = `step-n` and compare = `step-(n+1)` to keep diff focused.
+- After `step-n` merges, retarget `step-(n+1)` PR to `main`.

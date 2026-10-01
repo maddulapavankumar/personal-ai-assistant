@@ -27,4 +27,5 @@ All coding work must follow a milestone contract before implementation starts.
 - Multi-agent work in this repository must use explicit Planner -> Builder -> Reviewer phases per milestone; parallel builders on one milestone caused drift risk and should be avoided.
 - Scope expansion should be treated as a blocker requiring explicit user confirmation, not as an opportunity for proactive additions.
 - Keep milestones small and testable (one vertical slice at a time) to preserve predictable Copilot-generated output quality.
-
+- For stacked milestone pull requests, use previous step branch as PR base first, then retarget to `main` after prior step merges to preserve small, reviewable diffs.
+- PR template placeholders must be replaced with concrete evidence before merge; incomplete template text is treated as a process failure.

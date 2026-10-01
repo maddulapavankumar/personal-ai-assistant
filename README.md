@@ -98,7 +98,7 @@ After pushing, configure branch protection for `main` per:
 
 Build only:
 
-- chat API skeleton
+- chat API skeleton with deterministic rule-based memory extraction
 - memory model + CRUD endpoints
 - reminder model + CRUD endpoints
 - basic routine-candidate table + read endpoint

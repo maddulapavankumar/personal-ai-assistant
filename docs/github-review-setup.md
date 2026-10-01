@@ -18,6 +18,7 @@ Use:
 - Require conversation resolution before merging
 - Require status checks to pass before merging
   - Required check: `backend-tests`
+  - Required check: `pr-template-compliance`
 - Restrict force pushes
 
 ## 2) Keep PRs milestone-sized
@@ -55,3 +56,9 @@ For each PR:
 4. CI green
 5. Merge
 
+## 5) Repo process automation checks
+
+Workflow: [repo-process-guards.yml](../.github/workflows/repo-process-guards.yml)
+
+- `pr-template-compliance` (**required/failing**) checks PR body completeness against the milestone template.
+- `docs-instructions-drift` (**warning-only**) signals when code/workflow changes happen without corresponding README/workflow/instruction updates.

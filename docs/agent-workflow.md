@@ -95,6 +95,7 @@ Before requesting merge:
 2. Include exact validation commands and outcomes (pass/fail).
 3. Resolve all selected review comments and re-run targeted tests.
 4. Confirm CI checks are green.
+5. Confirm `pr-template-compliance` check is green.
 
 When using stacked milestone branches:
 
@@ -110,3 +111,14 @@ Before closing a milestone, ensure:
 2. Instruction learnings are updated when a reusable pattern/pitfall was discovered.
 3. PR body includes final test outcomes after any follow-up fixes.
 4. If process docs changed, include them in the same milestone PR unless scope requires a separate docs PR.
+
+## Repo automation guardrails
+
+This repo includes process automation in:
+
+- [.github/workflows/repo-process-guards.yml](../.github/workflows/repo-process-guards.yml)
+
+Guard behavior:
+- `pr-template-compliance` fails PRs with incomplete template/checklist evidence.
+- `docs-instructions-drift` warns (does not fail) when code changes lack aligned process-doc updates.
+- `docs-instructions-drift` warns (does not fail) when code changes lack aligned process-doc updates.

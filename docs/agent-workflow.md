@@ -101,3 +101,12 @@ When using stacked milestone branches:
 - Create `step-(n+1)` from `step-n` branch.
 - Open PR with base = `step-n` and compare = `step-(n+1)` to keep diff focused.
 - After `step-n` merges, retarget `step-(n+1)` PR to `main`.
+
+## Definition of done for each milestone
+
+Before closing a milestone, ensure:
+
+1. README status section reflects latest merged/open milestone state.
+2. Instruction learnings are updated when a reusable pattern/pitfall was discovered.
+3. PR body includes final test outcomes after any follow-up fixes.
+4. If process docs changed, include them in the same milestone PR unless scope requires a separate docs PR.

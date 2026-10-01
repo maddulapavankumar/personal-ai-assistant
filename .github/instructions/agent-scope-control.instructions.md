@@ -21,6 +21,7 @@ All coding work must follow a milestone contract before implementation starts.
 3. Do not expand API/schema scope without approval.
 4. If requirements are ambiguous, stop and ask.
 5. Run targeted tests for changed behavior before handoff.
+6. Before milestone handoff, refresh directly related process docs (README status, workflow/checklist docs, and instruction learnings when applicable).
 
 ## Learnings
 

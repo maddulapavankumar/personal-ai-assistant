@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
-from app.models.memory import Memory
 from app.services.memory_extraction_service import extract_memory_candidates
+from app.services.memory_service import create_extracted_memories
 
 
 def maybe_extract_memories(
@@ -21,7 +21,4 @@ def maybe_extract_memories(
         conversation_id=conversation_id,
         message_id=message_id,
     )
-    for candidate in candidates:
-        db.add(Memory(user_id=user_id, **candidate.model_dump()))
-    return len(candidates)
-
+    return create_extracted_memories(db=db, user_id=user_id, candidates=candidates)

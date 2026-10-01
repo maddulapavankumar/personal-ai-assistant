@@ -74,6 +74,11 @@ Control extraction per chat request (optional):
 - `extraction_mode = "auto"` (default behavior, runs deterministic extraction)
 - `extraction_mode = "off"` (skips extraction for that request)
 
+Memory quality controls:
+
+- duplicate extracted memories are deterministically suppressed (same user + type + normalized content)
+- `GET /api/v1/memories?status=ACTIVE|SUPERSEDED|REJECTED` can filter by status
+
 ## Recommended milestone flow (Copilot Agents)
 
 Use a strict 3-role flow per milestone:
@@ -102,12 +107,12 @@ After pushing, configure branch protection for `main` per:
 ## Current repository status
 
 - Milestone 1 Step 2 (deterministic extraction): merged to `main` via PR #1.
-- Milestone 1 Step 3 (tool routing controls): open as PR #2 with passing checks.
+- Milestone 1 Step 3 (tool routing controls): merged to `main` via PR #2.
 
 Recommended immediate sequence:
 
-1. Merge PR #2.
-2. Rebase next milestone branch from updated `main`.
+1. Start the next milestone branch from updated `main`.
+2. Keep the next slice small and testable.
 3. Start the next slice with Planner -> Builder -> Reviewer flow.
 
 ## First implementation milestone (approved target)

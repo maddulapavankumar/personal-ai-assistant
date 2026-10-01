@@ -15,6 +15,9 @@ def test_chat_extracts_preference_memory_with_provenance(client):
     assert memory["provenance_json"]["message_id"] > 0
     assert memory["provenance_json"]["rule_id"] == "pref_prefer_statement"
     assert memory["provenance_json"]["extractor_version"] == "memory-rule-extractor-v1"
+    assert memory["provenance_json"]["decision"] == "accepted"
+    assert memory["provenance_json"]["decision_reason"] == "new_extraction"
+    assert memory["provenance_json"]["reviewed_by"] == "system"
 
 
 def test_chat_extracts_fact_memory(client):
@@ -57,3 +60,18 @@ def test_chat_skips_memory_when_no_rule_matches(client):
     memories_response = client.get("/api/v1/memories")
     assert memories_response.status_code == 200
     assert memories_response.json() == []
+
+
+def test_chat_suppresses_duplicate_extracted_memories(client):
+    first = client.post("/api/v1/chat", json={"message": "I own an Echo Show 5."})
+    assert first.status_code == 200
+    second = client.post("/api/v1/chat", json={"message": "I own an Echo Show 5."})
+    assert second.status_code == 200
+
+    memories_response = client.get("/api/v1/memories")
+    assert memories_response.status_code == 200
+    memories = memories_response.json()
+    assert len(memories) == 1
+    memory = memories[0]
+    assert memory["provenance_json"]["duplicate_suppressed_count"] == 1
+    assert len(memory["provenance_json"]["duplicate_suppressed_events"]) == 1

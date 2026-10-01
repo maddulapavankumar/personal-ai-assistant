@@ -40,10 +40,19 @@ def handle_chat_turn(db: Session, user_id: str, payload: ChatRequest) -> ChatRes
     reply = "MVP assistant is running. Next milestone will integrate tool-calling and memory extraction."
     if actions:
         action = actions[0]
-        if action.status == "executed":
+        if action.status == "executed" and action.action == "create_reminder":
             reply = "Reminder created from your chat command."
+        elif action.status == "executed" and action.action == "update_reminder":
+            reply = "Reminder updated from your chat command."
+        elif action.status == "executed" and action.action == "cancel_reminder":
+            reply = "Reminder cancelled from your chat command."
+        elif action.status == "ignored":
+            reply = "Reminder not found for that command."
         elif action.status == "invalid":
-            reply = "Invalid reminder command. Use: remind me to <title> at <ISO-8601 datetime>"
+            reply = (
+                "Invalid reminder command. Use: remind me to <title> at <ISO-8601 datetime>; "
+                "update reminder <id> title <text> at <ISO-8601 datetime>; cancel reminder <id>"
+            )
 
     assistant_message = Message(conversation_id=conversation.id, role="assistant", content=reply)
     db.add(assistant_message)

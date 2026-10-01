@@ -29,6 +29,27 @@ def test_chat_extracts_fact_memory(client):
     assert memories[0]["provenance_json"]["rule_id"] == "fact_ownership_statement"
 
 
+def test_chat_extracts_dislike_preference_memory(client):
+    response = client.post("/api/v1/chat", json={"message": "I don't like loud alarms."})
+    assert response.status_code == 200
+
+    memories_response = client.get("/api/v1/memories")
+    assert memories_response.status_code == 200
+    memories = memories_response.json()
+    assert len(memories) == 1
+    assert memories[0]["type"] == "PREFERENCE"
+    assert memories[0]["provenance_json"]["rule_id"] == "pref_dislike_statement"
+
+
+def test_chat_skips_non_ownership_i_have_phrases(client):
+    response = client.post("/api/v1/chat", json={"message": "I have to go now."})
+    assert response.status_code == 200
+
+    memories_response = client.get("/api/v1/memories")
+    assert memories_response.status_code == 200
+    assert memories_response.json() == []
+
+
 def test_chat_skips_memory_when_no_rule_matches(client):
     response = client.post("/api/v1/chat", json={"message": "Hello there."})
     assert response.status_code == 200
@@ -36,4 +57,3 @@ def test_chat_skips_memory_when_no_rule_matches(client):
     memories_response = client.get("/api/v1/memories")
     assert memories_response.status_code == 200
     assert memories_response.json() == []
-

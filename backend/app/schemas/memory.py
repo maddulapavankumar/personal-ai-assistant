@@ -18,6 +18,9 @@ class MemoryUpdate(BaseModel):
     importance: float | None = Field(default=None, ge=0, le=1)
     status: str | None = Field(default=None, min_length=2, max_length=32)
     provenance_json: dict | None = None
+    reviewed_by: str | None = Field(default=None, min_length=2, max_length=64)
+    decision: str | None = Field(default=None, min_length=2, max_length=64)
+    decision_reason: str | None = Field(default=None, min_length=2, max_length=255)
 
 
 class MemoryOut(BaseModel):
@@ -34,4 +37,3 @@ class MemoryOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
-

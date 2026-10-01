@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -11,8 +13,12 @@ router = APIRouter(prefix="/api/v1/memories", tags=["memories"])
 
 
 @router.get("", response_model=list[MemoryOut])
-def get_memories(db: Session = Depends(get_db), user_id: str = Depends(get_user_id)):
-    return list_memories(db, user_id=user_id)
+def get_memories(
+    status: Literal["ACTIVE", "SUPERSEDED", "REJECTED"] | None = None,
+    db: Session = Depends(get_db),
+    user_id: str = Depends(get_user_id),
+):
+    return list_memories(db, user_id=user_id, status=status)
 
 
 @router.post("", response_model=MemoryOut, status_code=status.HTTP_201_CREATED)
@@ -36,4 +42,3 @@ def delete_memory(memory_id: int, db: Session = Depends(get_db), user_id: str = 
     db.delete(memory)
     db.commit()
     return None
-

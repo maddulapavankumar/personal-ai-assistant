@@ -9,6 +9,14 @@ class ChatRequest(BaseModel):
     extraction_mode: Literal["auto", "off"] | None = None
 
 
+class ChatAction(BaseModel):
+    action: str
+    status: Literal["executed", "ignored", "invalid"]
+    rule_id: str
+    reminder_id: int | None = None
+
+
 class ChatResponse(BaseModel):
     conversation_id: int
     reply: str
+    actions: list[ChatAction] = Field(default_factory=list)

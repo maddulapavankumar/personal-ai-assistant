@@ -79,6 +79,11 @@ Memory quality controls:
 - duplicate extracted memories are deterministically suppressed (same user + type + normalized content)
 - `GET /api/v1/memories?status=ACTIVE|SUPERSEDED|REJECTED` can filter by status
 
+Deterministic chat reminder command:
+
+- `remind me to <title> at <ISO-8601 datetime>`
+- Example: `remind me to pay rent at 2026-10-05T09:00:00Z`
+
 ## Recommended milestone flow (Copilot Agents)
 
 Use a strict 3-role flow per milestone:

@@ -139,9 +139,32 @@ def test_chat_update_reminder_command_returns_ignored_when_missing_reminder(clie
 
     events = db_session.query(ReminderAuditEvent).all()
     assert len(events) == 1
+    assert events[0].reminder_id is None
     assert events[0].payload_json["action"] == "update_reminder"
     assert events[0].payload_json["status"] == "ignored"
     assert events[0].payload_json["reason"] == "reminder_not_found"
+    assert events[0].payload_json["requested_reminder_id"] == 999
+
+
+def test_chat_cancel_reminder_command_returns_ignored_when_missing_reminder(client, db_session):
+    response = client.post(
+        "/api/v1/chat",
+        json={"message": "cancel reminder 999"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["action"] == "cancel_reminder"
+    assert body["actions"][0]["status"] == "ignored"
+    assert body["actions"][0]["rule_id"] == "chat_cancel_reminder_id_v1"
+    assert "Reminder not found" in body["reply"]
+
+    events = db_session.query(ReminderAuditEvent).all()
+    assert len(events) == 1
+    assert events[0].reminder_id is None
+    assert events[0].payload_json["action"] == "cancel_reminder"
+    assert events[0].payload_json["status"] == "ignored"
+    assert events[0].payload_json["reason"] == "reminder_not_found"
+    assert events[0].payload_json["requested_reminder_id"] == 999
 
 
 def test_chat_malformed_update_reminder_command_returns_invalid_action(client, db_session):

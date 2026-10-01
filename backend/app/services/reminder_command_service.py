@@ -12,8 +12,8 @@ REMINDER_CREATE_RULE_ID = "chat_remind_me_iso_v1"
 REMINDER_UPDATE_RULE_ID = "chat_update_reminder_id_iso_v1"
 REMINDER_CANCEL_RULE_ID = "chat_cancel_reminder_id_v1"
 REMINDER_CREATE_PREFIX_PATTERN = re.compile(r"^\s*remind me to (?P<body>.+)\s*$", re.IGNORECASE)
-UPDATE_REMINDER_PREFIX_PATTERN = re.compile(r"^\s*update reminder (?P<reminder_id>\d+) title (?P<body>.+)\s*$", re.IGNORECASE)
-CANCEL_REMINDER_PATTERN = re.compile(r"^\s*cancel reminder (?P<reminder_id>\d+)\s*$", re.IGNORECASE)
+REMINDER_UPDATE_PREFIX_PATTERN = re.compile(r"^\s*update reminder (?P<reminder_id>\d+) title (?P<body>.+)\s*$", re.IGNORECASE)
+REMINDER_CANCEL_PATTERN = re.compile(r"^\s*cancel reminder (?P<reminder_id>\d+)\s*$", re.IGNORECASE)
 
 
 def maybe_process_reminder_command(
@@ -123,7 +123,7 @@ def _process_update_reminder_command(
     conversation_id: int,
     message_id: int,
 ) -> ChatAction:
-    match = UPDATE_REMINDER_PREFIX_PATTERN.match(message_text)
+    match = REMINDER_UPDATE_PREFIX_PATTERN.match(message_text)
     if not match:
         return _invalid_action_with_audit(
             db=db,
@@ -143,7 +143,8 @@ def _process_update_reminder_command(
             user_id=user_id,
             action="update_reminder",
             rule_id=REMINDER_UPDATE_RULE_ID,
-            reminder_id=reminder_id,
+            reminder_id=None,
+            requested_reminder_id=reminder_id,
             conversation_id=conversation_id,
             message_id=message_id,
             message_text=message_text,
@@ -156,7 +157,8 @@ def _process_update_reminder_command(
             user_id=user_id,
             action="update_reminder",
             rule_id=REMINDER_UPDATE_RULE_ID,
-            reminder_id=reminder_id,
+            reminder_id=None,
+            requested_reminder_id=reminder_id,
             conversation_id=conversation_id,
             message_id=message_id,
             message_text=message_text,
@@ -168,10 +170,15 @@ def _process_update_reminder_command(
             db=db,
             user_id=user_id,
             rule_id=REMINDER_UPDATE_RULE_ID,
-            reminder_id=reminder_id,
+            reminder_id=None,
             conversation_id=conversation_id,
             message_id=message_id,
-            payload_json={"action": "update_reminder", "status": "ignored", "reason": "reminder_not_found"},
+            payload_json={
+                "action": "update_reminder",
+                "status": "ignored",
+                "reason": "reminder_not_found",
+                "requested_reminder_id": reminder_id,
+            },
         )
         return ChatAction(action="update_reminder", status="ignored", rule_id=REMINDER_UPDATE_RULE_ID, reminder_id=reminder_id)
 
@@ -195,7 +202,7 @@ def _process_cancel_reminder_command(
     conversation_id: int,
     message_id: int,
 ) -> ChatAction:
-    match = CANCEL_REMINDER_PATTERN.match(message_text)
+    match = REMINDER_CANCEL_PATTERN.match(message_text)
     if not match:
         return _invalid_action_with_audit(
             db=db,
@@ -214,10 +221,15 @@ def _process_cancel_reminder_command(
             db=db,
             user_id=user_id,
             rule_id=REMINDER_CANCEL_RULE_ID,
-            reminder_id=reminder_id,
+            reminder_id=None,
             conversation_id=conversation_id,
             message_id=message_id,
-            payload_json={"action": "cancel_reminder", "status": "ignored", "reason": "reminder_not_found"},
+            payload_json={
+                "action": "cancel_reminder",
+                "status": "ignored",
+                "reason": "reminder_not_found",
+                "requested_reminder_id": reminder_id,
+            },
         )
         return ChatAction(action="cancel_reminder", status="ignored", rule_id=REMINDER_CANCEL_RULE_ID, reminder_id=reminder_id)
 
@@ -264,7 +276,11 @@ def _invalid_action_with_audit(
     conversation_id: int,
     message_id: int,
     message_text: str,
+    requested_reminder_id: int | None = None,
 ) -> ChatAction:
+    payload_json = {"action": action, "status": "invalid", "reason": "invalid_command_format", "message": message_text}
+    if requested_reminder_id is not None:
+        payload_json["requested_reminder_id"] = requested_reminder_id
     _create_audit_event(
         db=db,
         user_id=user_id,
@@ -272,7 +288,7 @@ def _invalid_action_with_audit(
         reminder_id=reminder_id,
         conversation_id=conversation_id,
         message_id=message_id,
-        payload_json={"action": action, "status": "invalid", "reason": "invalid_command_format", "message": message_text},
+        payload_json=payload_json,
     )
     return ChatAction(action=action, status="invalid", rule_id=rule_id, reminder_id=reminder_id)
 

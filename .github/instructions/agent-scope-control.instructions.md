@@ -30,3 +30,4 @@ All coding work must follow a milestone contract before implementation starts.
 - Keep milestones small and testable (one vertical slice at a time) to preserve predictable Copilot-generated output quality.
 - For stacked milestone pull requests, use previous step branch as PR base first, then retarget to `main` after prior step merges to preserve small, reviewable diffs.
 - PR template placeholders must be replaced with concrete evidence before merge; incomplete template text is treated as a process failure.
+- Repository-level automation should enforce PR template compliance as a required check and docs/instruction drift as warning-only initially.

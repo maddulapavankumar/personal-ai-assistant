@@ -40,7 +40,7 @@ def extract_memory_candidates(message_text: str, conversation_id: int, message_i
             )
         )
 
-    if re.search(r"\bi own\b|\bi have\b", lower_content):
+    if re.search(r"\bi own\b|\bi have (a|an|the|my)\b", lower_content):
         candidates.append(
             _build_candidate(
                 memory_type="FACT",
@@ -78,4 +78,3 @@ def _build_candidate(
             "extractor_version": EXTRACTOR_VERSION,
         },
     )
-

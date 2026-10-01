@@ -69,6 +69,11 @@ Run tests:
 pytest -q
 ```
 
+Control extraction per chat request (optional):
+
+- `extraction_mode = "auto"` (default behavior, runs deterministic extraction)
+- `extraction_mode = "off"` (skips extraction for that request)
+
 ## Recommended milestone flow (Copilot Agents)
 
 Use a strict 3-role flow per milestone:
@@ -93,6 +98,17 @@ This repository includes:
 After pushing, configure branch protection for `main` per:
 
 - [docs/github-review-setup.md](./docs/github-review-setup.md)
+
+## Current repository status
+
+- Milestone 1 Step 2 (deterministic extraction): merged to `main` via PR #1.
+- Milestone 1 Step 3 (tool routing controls): open as PR #2 with passing checks.
+
+Recommended immediate sequence:
+
+1. Merge PR #2.
+2. Rebase next milestone branch from updated `main`.
+3. Start the next slice with Planner -> Builder -> Reviewer flow.
 
 ## First implementation milestone (approved target)
 

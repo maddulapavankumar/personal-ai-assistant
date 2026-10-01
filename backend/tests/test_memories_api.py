@@ -20,6 +20,26 @@ def test_create_and_list_memories(client):
     assert data[0]["source"] == "USER_MESSAGE"
 
 
+def test_get_memory_by_id(client):
+    create_response = client.post(
+        "/api/v1/memories",
+        json={"type": "FACT", "content": "My thermostat is in the hall.", "confidence": 0.8, "importance": 0.5},
+    )
+    memory_id = create_response.json()["id"]
+
+    detail_response = client.get(f"/api/v1/memories/{memory_id}")
+    assert detail_response.status_code == 200
+    detail = detail_response.json()
+    assert detail["id"] == memory_id
+    assert detail["content"] == "My thermostat is in the hall."
+
+
+def test_get_memory_by_id_returns_404_for_missing_memory(client):
+    response = client.get("/api/v1/memories/9999")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Memory not found"
+
+
 def test_update_and_delete_memory(client):
     create_response = client.post(
         "/api/v1/memories",
@@ -39,3 +59,27 @@ def test_update_and_delete_memory(client):
     assert list_response.status_code == 200
     assert list_response.json() == []
 
+
+def test_patch_memory_rejects_invalid_status_transition(client):
+    create_response = client.post(
+        "/api/v1/memories",
+        json={"type": "FACT", "content": "I prefer bright lights.", "confidence": 0.8, "importance": 0.6},
+    )
+    memory_id = create_response.json()["id"]
+
+    patch_response = client.patch(f"/api/v1/memories/{memory_id}", json={"status": "PENDING_REVIEW"})
+    assert patch_response.status_code == 409
+    assert "Invalid status transition: ACTIVE -> PENDING_REVIEW" in patch_response.json()["detail"]
+
+
+def test_patch_memory_with_same_status_does_not_mutate_provenance(client):
+    create_response = client.post(
+        "/api/v1/memories",
+        json={"type": "FACT", "content": "I use a standing desk.", "confidence": 0.8, "importance": 0.6},
+    )
+    memory_id = create_response.json()["id"]
+
+    patch_response = client.patch(f"/api/v1/memories/{memory_id}", json={"status": "ACTIVE"})
+    assert patch_response.status_code == 200
+    assert patch_response.json()["status"] == "ACTIVE"
+    assert patch_response.json()["provenance_json"] == {}

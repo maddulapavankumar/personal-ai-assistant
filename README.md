@@ -77,8 +77,11 @@ Control extraction per chat request (optional):
 Memory quality controls:
 
 - duplicate extracted memories are deterministically suppressed (same user + type + normalized content)
-- `GET /api/v1/memories?status=ACTIVE|SUPERSEDED|REJECTED` can filter by status
+- `GET /api/v1/memories?status=ACTIVE|SUPERSEDED|REJECTED|PENDING_REVIEW` can filter by status
+- `GET /api/v1/memories/{memory_id}` returns one memory by id for the current user
+- `GET /api/v1/memories/review-queue` supports optional filtering/sorting (`status`, `type`, `sort_by`, `order`)
 - low-confidence extracted memories are stored as `PENDING_REVIEW` for explicit approval/rejection
+- status transition guardrails are enforced (`PENDING_REVIEW -> ACTIVE|REJECTED`, `ACTIVE -> SUPERSEDED|REJECTED`, `SUPERSEDED -> ACTIVE|REJECTED`, `REJECTED` terminal)
 
 Deterministic chat reminder command:
 
@@ -116,14 +119,14 @@ After pushing, configure branch protection for `main` per:
 - Milestone 1 Step 3 (tool routing controls): merged to `main` via PR #2.
 - Milestone 1 Step 4 (memory quality controls): merged to `main` via PR #3.
 - Milestone 1 Step 5 (chat reminder command): merged to `main` via PR #4.
-- Milestone 1 Step 6 (repo process automation): open as PR #5.
+- Milestone 1 Step 6 (repo process automation): merged to `main` via PR #5.
+- Milestone 1 Step 7 (memory review queue workflow): merged to `main` via PR #6.
 
 Recommended immediate sequence:
 
-1. Merge PR #5 when checks and review are green.
-2. Keep the next slice small and testable.
-3. Start the next milestone branch from updated `main`.
-4. Start the next slice with Planner -> Builder -> Reviewer flow.
+1. Keep the next slice small and testable.
+2. Start the next milestone branch from updated `main`.
+3. Start the next slice with Planner -> Builder -> Reviewer flow.
 
 ## First implementation milestone (approved target)
 

@@ -69,6 +69,11 @@ Run tests:
 pytest -q
 ```
 
+Control extraction per chat request (optional):
+
+- `extraction_mode = "auto"` (default behavior, runs deterministic extraction)
+- `extraction_mode = "off"` (skips extraction for that request)
+
 ## Recommended milestone flow (Copilot Agents)
 
 Use a strict 3-role flow per milestone:

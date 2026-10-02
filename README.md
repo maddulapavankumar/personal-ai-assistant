@@ -102,6 +102,12 @@ Routine suggestions v1:
 - `GET /api/v1/routines/suggestions` returns deterministic, read-only routine suggestions from ACTIVE memories + ACTIVE reminders
 - stable ordering by confidence (desc) then title (asc)
 
+Daily briefing v1:
+
+- `GET /api/v1/briefings/daily` returns deterministic, read-only daily briefing data
+- includes reminders due today (local server date), top 3 ACTIVE memories, and routine suggestions
+- top memories are sorted by importance (desc), confidence (desc), updated_at (desc), then id (asc)
+
 ## Recommended milestone flow (Copilot Agents)
 
 Use a strict 3-role flow per milestone:
@@ -145,6 +151,9 @@ After pushing, configure branch protection for `main` per:
 - Milestone 1 Step 9 (deterministic reminder update/cancel lifecycle): merged to `main` via PR #8.
 - Milestone 1 Step 10 (deterministic smoke journey): merged to `main` via PR #9.
 - Milestone 2A Step 11 (definition-of-done docs mapping gate): merged to `main` via PR #10.
+- Milestone 2B Step 12 (memory-aware chat context): merged to `main` via PR #11.
+- Milestone 2B Step 13 (reminder query commands): merged to `main` via PR #12.
+- Milestone 2B Step 14 (routine suggestions v1): merged to `main` via PR #13.
 
 Recommended immediate sequence:
 

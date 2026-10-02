@@ -67,3 +67,42 @@ def test_daily_briefing_limits_top_active_memories_to_three(client):
     response = client.get("/api/v1/briefings/daily")
     assert response.status_code == 200
     assert len(response.json()["top_active_memories"]) == 3
+
+
+def test_daily_briefing_delta_returns_zero_values_by_default(client):
+    response = client.get("/api/v1/briefings/daily-delta")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["due_today_count"] == 0
+    assert body["due_yesterday_count"] == 0
+    assert body["due_count_delta"] == 0
+    assert body["new_active_memories_count"] == 0
+    assert body["new_reminders_created_count"] == 0
+
+
+def test_daily_briefing_delta_compares_today_and_yesterday(client):
+    now_local = datetime.now().astimezone()
+    due_today = now_local.replace(hour=9, minute=0, second=0, microsecond=0).isoformat()
+    due_today_second = now_local.replace(hour=13, minute=0, second=0, microsecond=0).isoformat()
+    due_yesterday = (now_local - timedelta(days=1)).replace(hour=16, minute=0, second=0, microsecond=0).isoformat()
+    due_tomorrow = (now_local + timedelta(days=1)).replace(hour=10, minute=0, second=0, microsecond=0).isoformat()
+
+    client.post("/api/v1/reminders", json={"title": "Today first", "due_at": due_today})
+    client.post("/api/v1/reminders", json={"title": "Today second", "due_at": due_today_second})
+    client.post("/api/v1/reminders", json={"title": "Yesterday one", "due_at": due_yesterday})
+    client.post("/api/v1/reminders", json={"title": "Tomorrow one", "due_at": due_tomorrow})
+    client.post(
+        "/api/v1/memories",
+        json={"type": "FACT", "content": "Today memory note", "confidence": 0.9, "importance": 0.9},
+    )
+
+    response = client.get("/api/v1/briefings/daily-delta")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["date"] == now_local.date().isoformat()
+    assert body["yesterday"] == (now_local.date() - timedelta(days=1)).isoformat()
+    assert body["due_today_count"] == 2
+    assert body["due_yesterday_count"] == 1
+    assert body["due_count_delta"] == 1
+    assert body["new_active_memories_count"] == 1
+    assert body["new_reminders_created_count"] == 4

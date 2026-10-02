@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.schemas.chat import ChatAction
+from app.services.briefing_command_service import maybe_process_briefing_command
 from app.services.memory_extraction_service import extract_memory_candidates
 from app.services.memory_service import create_extracted_memories
 from app.services.reminder_command_service import maybe_process_reminder_command
@@ -34,6 +35,11 @@ def maybe_route_chat_actions(
     message_id: int,
 ) -> list[ChatAction]:
     actions: list[ChatAction] = []
+    briefing_action = maybe_process_briefing_command(message_text=message_text)
+    if briefing_action:
+        actions.append(briefing_action)
+        return actions
+
     reminder_action = maybe_process_reminder_command(
         db=db,
         user_id=user_id,

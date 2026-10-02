@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -58,5 +58,5 @@ def list_reminders_for_query(db: Session, user_id: str, query_scope: str) -> lis
 
 def _to_local_due_date(reminder_due_at: datetime, local_now: datetime):
     if reminder_due_at.tzinfo is None:
-        return reminder_due_at.date()
+        reminder_due_at = reminder_due_at.replace(tzinfo=timezone.utc)
     return reminder_due_at.astimezone(local_now.tzinfo).date()

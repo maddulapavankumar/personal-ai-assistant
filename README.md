@@ -89,6 +89,9 @@ Deterministic chat reminder command:
 - `remind me to <title> at <ISO-8601 datetime>`
 - `update reminder <id> title <text> at <ISO-8601 datetime>`
 - `cancel reminder <id>`
+- `show reminders`
+- `show reminders due today` (local server time)
+- `show reminders due this week` (local server time)
 - Example: `remind me to pay rent at 2026-10-05T09:00:00Z`
 - Example: `update reminder 12 title pay internet bill at 2026-10-06T08:30:00Z`
 - Example: `cancel reminder 12`

@@ -82,6 +82,7 @@ Memory quality controls:
 - `GET /api/v1/memories/review-queue` supports optional filtering/sorting (`status`, `type`, `sort_by`, `order`)
 - low-confidence extracted memories are stored as `PENDING_REVIEW` for explicit approval/rejection
 - status transition guardrails are enforced (`PENDING_REVIEW -> ACTIVE|REJECTED`, `ACTIVE -> SUPERSEDED|REJECTED`, `SUPERSEDED -> ACTIVE|REJECTED`, `REJECTED` terminal)
+- chat responses can include deterministic `memory_context` with up to 3 matching ACTIVE memories
 
 Deterministic chat reminder command:
 
@@ -134,6 +135,8 @@ After pushing, configure branch protection for `main` per:
 - Milestone 1 Step 7 (memory review queue workflow): merged to `main` via PR #6.
 - Milestone 1 Step 8 (memory inspection quality controls): merged to `main` via PR #7.
 - Milestone 1 Step 9 (deterministic reminder update/cancel lifecycle): merged to `main` via PR #8.
+- Milestone 1 Step 10 (deterministic smoke journey): merged to `main` via PR #9.
+- Milestone 2A Step 11 (definition-of-done docs mapping gate): merged to `main` via PR #10.
 
 Recommended immediate sequence:
 

@@ -94,6 +94,11 @@ Deterministic chat reminder command:
 - Example: `cancel reminder 12`
 - reminder audit events are appended for create/update/cancel with deterministic status (`executed`, `ignored`, `invalid`)
 
+Routine suggestions v1:
+
+- `GET /api/v1/routines/suggestions` returns deterministic, read-only routine suggestions from ACTIVE memories + ACTIVE reminders
+- stable ordering by confidence (desc) then title (asc)
+
 ## Recommended milestone flow (Copilot Agents)
 
 Use a strict 3-role flow per milestone:

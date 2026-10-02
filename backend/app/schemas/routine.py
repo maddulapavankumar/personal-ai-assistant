@@ -15,3 +15,10 @@ class RoutineCandidateOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
+
+class RoutineSuggestionOut(BaseModel):
+    title: str
+    description: str
+    confidence: float
+    source_memory_ids: list[int]
+    source_reminder_ids: list[int]

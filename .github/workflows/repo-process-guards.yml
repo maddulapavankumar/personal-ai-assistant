@@ -17,6 +17,19 @@ jobs:
         run: |
           ./.github/scripts/validate-pr-template.ps1
 
+  definition-of-done-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce definition-of-done docs mapping
+        shell: pwsh
+        run: |
+          ./.github/scripts/enforce-definition-of-done.ps1 -BaseSha "${{ github.event.pull_request.base.sha }}" -HeadSha "${{ github.event.pull_request.head.sha }}" -EventPath "${{ github.event_path }}"
+
   docs-instructions-drift:
     runs-on: ubuntu-latest
     steps:
@@ -29,4 +42,3 @@ jobs:
         shell: pwsh
         run: |
           ./.github/scripts/check-docs-instructions-drift.ps1 -BaseSha "${{ github.event.pull_request.base.sha }}" -HeadSha "${{ github.event.pull_request.head.sha }}"
-

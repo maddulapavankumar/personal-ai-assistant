@@ -120,5 +120,5 @@ This repo includes process automation in:
 
 Guard behavior:
 - `pr-template-compliance` fails PRs with incomplete template/checklist evidence.
-- `docs-instructions-drift` warns (does not fail) when code changes lack aligned process-doc updates.
+- `definition-of-done-gate` fails PRs when backend/workflow changes do not include required documentation updates per changed-file mapping rules.
 - `docs-instructions-drift` warns (does not fail) when code changes lack aligned process-doc updates.

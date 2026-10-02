@@ -19,6 +19,7 @@ Use:
 - Require status checks to pass before merging
   - Required check: `backend-tests`
   - Required check: `pr-template-compliance`
+  - Required check: `definition-of-done-gate`
 - Restrict force pushes
 
 ## 2) Keep PRs milestone-sized
@@ -61,4 +62,10 @@ For each PR:
 Workflow: [repo-process-guards.yml](../.github/workflows/repo-process-guards.yml)
 
 - `pr-template-compliance` (**required/failing**) checks PR body completeness against the milestone template.
+- `definition-of-done-gate` (**required/failing**) enforces changed-files -> required-docs mapping for backend and workflow/script changes.
+  - backend app/test changes require `README.md` updates in the same PR.
+  - workflow/script changes require updates to:
+    - `docs/github-review-setup.md`
+    - `docs/agent-workflow.md`
+    - `.github/instructions/agent-scope-control.instructions.md`
 - `docs-instructions-drift` (**warning-only**) signals when code/workflow changes happen without corresponding README/workflow/instruction updates.

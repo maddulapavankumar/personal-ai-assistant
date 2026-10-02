@@ -113,6 +113,12 @@ This repository includes:
 - CI workflow: [.github/workflows/backend-ci.yml](./.github/workflows/backend-ci.yml)
 - PR template: [.github/pull_request_template.md](./.github/pull_request_template.md)
 - Code owners: [.github/CODEOWNERS](./.github/CODEOWNERS)
+- Process guards workflow: [.github/workflows/repo-process-guards.yml](./.github/workflows/repo-process-guards.yml)
+  - `pr-template-compliance` (required/failing)
+  - `definition-of-done-gate` (required/failing)
+    - backend code/tests require `README.md` updates
+    - workflow/scripts require process-doc updates (`docs/github-review-setup.md`, `docs/agent-workflow.md`, `.github/instructions/agent-scope-control.instructions.md`)
+  - `docs-instructions-drift` (warning-only)
 
 After pushing, configure branch protection for `main` per:
 

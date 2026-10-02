@@ -4,8 +4,16 @@ from sqlalchemy.orm import Session
 
 from app.models.conversation import Conversation, Message
 from app.schemas.chat import ChatRequest, ChatResponse, MemoryContextItem
-from app.services.briefing_command_service import BRIEFING_DAILY_DELTA_RULE_ID, BRIEFING_DAILY_RULE_ID
-from app.services.briefing_service import build_daily_briefing_delta_reply, build_daily_briefing_reply
+from app.services.briefing_command_service import (
+    BRIEFING_DAILY_DELTA_RULE_ID,
+    BRIEFING_DAILY_RULE_ID,
+    REMINDER_COMPLETION_STATS_RULE_ID,
+)
+from app.services.briefing_service import (
+    build_daily_briefing_delta_reply,
+    build_daily_briefing_reply,
+    build_reminder_completion_stats_reply,
+)
 from app.services.memory_service import list_memories
 from app.services.reminder_command_service import (
     REMINDER_QUERY_ALL_RULE_ID,
@@ -96,10 +104,19 @@ def handle_chat_turn(db: Session, user_id: str, payload: ChatRequest) -> ChatRes
             reply = build_daily_briefing_reply(db=db, user_id=user_id)
         elif action.status == "executed" and action.action == "query_daily_briefing_delta":
             reply = build_daily_briefing_delta_reply(db=db, user_id=user_id)
+        elif action.status == "executed" and action.action == "query_reminder_completion_stats":
+            reply = build_reminder_completion_stats_reply(db=db, user_id=user_id)
         elif action.status == "invalid" and action.action == "query_reminders":
             reply = "Invalid reminder query command. Use: show reminders; show reminders due today; show reminders due this week"
-        elif action.status == "invalid" and action.rule_id in {BRIEFING_DAILY_RULE_ID, BRIEFING_DAILY_DELTA_RULE_ID}:
-            reply = "Invalid briefing command. Use: brief me; show daily briefing; what changed since yesterday; show daily delta"
+        elif action.status == "invalid" and action.rule_id in {
+            BRIEFING_DAILY_RULE_ID,
+            BRIEFING_DAILY_DELTA_RULE_ID,
+            REMINDER_COMPLETION_STATS_RULE_ID,
+        }:
+            reply = (
+                "Invalid briefing command. Use: brief me; show daily briefing; "
+                "what changed since yesterday; show daily delta; show reminder completion stats; show reminder stats"
+            )
         elif action.status == "invalid":
             reply = (
                 "Invalid reminder command. Use: remind me to <title> at <ISO-8601 datetime>; "

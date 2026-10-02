@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models.memory import Memory
 from app.models.reminder import Reminder
-from app.schemas.briefing import DailyBriefingDeltaOut, DailyBriefingOut
+from app.schemas.briefing import DailyBriefingDeltaOut, DailyBriefingOut, ReminderCompletionStatsOut
 from app.schemas.memory import MemoryOut
 from app.schemas.reminder import ReminderOut
 from app.services.reminder_service import list_reminders_for_query
@@ -137,3 +137,62 @@ def _to_local_date(value: datetime, local_now: datetime) -> date:
         value = value.replace(tzinfo=timezone.utc)
     return value.astimezone(local_now.tzinfo).date()
 
+
+def build_reminder_completion_stats(db: Session, user_id: str) -> ReminderCompletionStatsOut:
+    now_local = datetime.now().astimezone()
+    today_date = now_local.date()
+    week_start = (now_local - timedelta(days=now_local.weekday())).date()
+    week_end = week_start + timedelta(days=6)
+
+    reminders = list(db.scalars(select(Reminder).where(Reminder.user_id == user_id)))
+    due_today_count = 0
+    completed_due_today_count = 0
+    due_this_week_count = 0
+    completed_due_this_week_count = 0
+
+    for reminder in reminders:
+        if reminder.status == "CANCELLED":
+            continue
+        due_date = _to_local_date(reminder.due_at, now_local)
+
+        if due_date == today_date:
+            due_today_count += 1
+            if reminder.status == "COMPLETED":
+                completed_due_today_count += 1
+
+        if week_start <= due_date <= week_end:
+            due_this_week_count += 1
+            if reminder.status == "COMPLETED":
+                completed_due_this_week_count += 1
+
+    completion_rate_today = round((completed_due_today_count / due_today_count), 4) if due_today_count else 0.0
+    completion_rate_this_week = (
+        round((completed_due_this_week_count / due_this_week_count), 4) if due_this_week_count else 0.0
+    )
+
+    return ReminderCompletionStatsOut(
+        date=today_date,
+        week_start=week_start,
+        week_end=week_end,
+        due_today_count=due_today_count,
+        completed_due_today_count=completed_due_today_count,
+        completion_rate_today=completion_rate_today,
+        due_this_week_count=due_this_week_count,
+        completed_due_this_week_count=completed_due_this_week_count,
+        completion_rate_this_week=completion_rate_this_week,
+    )
+
+
+def build_reminder_completion_stats_reply(db: Session, user_id: str) -> str:
+    stats = build_reminder_completion_stats(db=db, user_id=user_id)
+    return "\n".join(
+        [
+            f"Reminder completion stats for {stats.date.isoformat()}",
+            f"- Due today: {stats.due_today_count}",
+            f"- Completed due today: {stats.completed_due_today_count}",
+            f"- Completion rate today: {stats.completion_rate_today:.2%}",
+            f"- Due this week: {stats.due_this_week_count}",
+            f"- Completed due this week: {stats.completed_due_this_week_count}",
+            f"- Completion rate this week: {stats.completion_rate_this_week:.2%}",
+        ]
+    )

@@ -22,3 +22,15 @@ class DailyBriefingDeltaOut(BaseModel):
     due_count_delta: int
     new_active_memories_count: int
     new_reminders_created_count: int
+
+
+class ReminderCompletionStatsOut(BaseModel):
+    date: date
+    week_start: date
+    week_end: date
+    due_today_count: int
+    completed_due_today_count: int
+    completion_rate_today: float
+    due_this_week_count: int
+    completed_due_this_week_count: int
+    completion_rate_this_week: float

@@ -56,3 +56,26 @@ def test_chat_reminder_completion_stats_command_returns_summary(client):
     assert f"Reminder completion stats for {now_local.date().isoformat()}" in body["reply"]
     assert "Completion rate today:" in body["reply"]
     assert "Completion rate this week:" in body["reply"]
+
+
+def test_chat_weekly_briefing_command_returns_summary(client):
+    now_local = datetime.now().astimezone()
+    client.post("/api/v1/reminders", json={"title": "Weekly item", "due_at": (now_local + timedelta(days=1)).isoformat()})
+    response = client.post("/api/v1/chat", json={"message": "show weekly briefing"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["action"] == "query_weekly_briefing"
+    assert body["actions"][0]["rule_id"] == "chat_weekly_briefing_v1"
+    assert "Weekly briefing for " in body["reply"]
+    assert "Completion this week:" in body["reply"]
+
+
+def test_chat_next_actions_command_returns_summary(client):
+    now_local = datetime.now().astimezone()
+    client.post("/api/v1/reminders", json={"title": "Next action reminder", "due_at": (now_local + timedelta(hours=2)).isoformat()})
+    response = client.post("/api/v1/chat", json={"message": "what should i do next"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["action"] == "query_next_actions"
+    assert body["actions"][0]["rule_id"] == "chat_next_actions_v1"
+    assert "Next best actions:" in body["reply"]

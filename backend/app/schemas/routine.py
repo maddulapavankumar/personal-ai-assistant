@@ -22,3 +22,11 @@ class RoutineSuggestionOut(BaseModel):
     confidence: float
     source_memory_ids: list[int]
     source_reminder_ids: list[int]
+
+
+class NextActionOut(BaseModel):
+    priority: int
+    title: str
+    description: str
+    source_reminder_id: int | None
+    source_memory_id: int | None

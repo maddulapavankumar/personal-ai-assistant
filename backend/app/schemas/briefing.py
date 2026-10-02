@@ -34,3 +34,15 @@ class ReminderCompletionStatsOut(BaseModel):
     due_this_week_count: int
     completed_due_this_week_count: int
     completion_rate_this_week: float
+
+
+class WeeklyBriefingOut(BaseModel):
+    date: date
+    week_start: date
+    week_end: date
+    due_this_week_reminders: list[ReminderOut]
+    due_this_week_count: int
+    completed_due_this_week_count: int
+    completion_rate_this_week: float
+    top_active_memories: list[MemoryOut]
+    routine_suggestions: list[RoutineSuggestionOut]

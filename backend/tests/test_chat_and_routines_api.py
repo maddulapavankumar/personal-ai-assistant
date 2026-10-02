@@ -62,3 +62,23 @@ def test_routine_suggestions_avoid_generic_token_false_overlap(client):
     assert response.status_code == 200
     titles = [item["title"] for item in response.json()]
     assert "Align reminders with known preferences" not in titles
+
+
+def test_next_actions_returns_fallback_when_no_inputs(client):
+    response = client.get("/api/v1/routines/next-actions")
+    assert response.status_code == 200
+    actions = response.json()
+    assert len(actions) == 1
+    assert actions[0]["title"] == "Create your first reminder"
+
+
+def test_next_actions_prioritizes_due_reminder_and_memory_review(client):
+    now_local = datetime.now().astimezone()
+    client.post("/api/v1/reminders", json={"title": "First due", "due_at": (now_local + timedelta(hours=1)).isoformat()})
+    client.post("/api/v1/memories", json={"type": "FACT", "content": "I plan meetings at 9am.", "confidence": 0.5, "importance": 0.6})
+
+    response = client.get("/api/v1/routines/next-actions")
+    assert response.status_code == 200
+    actions = response.json()
+    assert actions[0]["title"] == "Complete next due reminder"
+    assert actions[1]["title"] == "Run memory-informed planning review"

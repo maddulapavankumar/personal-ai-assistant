@@ -33,3 +33,28 @@ def test_update_and_delete_reminder(client):
     assert list_response.status_code == 200
     assert list_response.json() == []
 
+
+def test_patch_reminder_rejects_invalid_status_transition(client):
+    due_at = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+    create_response = client.post("/api/v1/reminders", json={"title": "Status transition item", "due_at": due_at})
+    reminder_id = create_response.json()["id"]
+
+    completed_response = client.patch(f"/api/v1/reminders/{reminder_id}", json={"status": "COMPLETED"})
+    assert completed_response.status_code == 200
+    assert completed_response.json()["status"] == "COMPLETED"
+
+    invalid_response = client.patch(f"/api/v1/reminders/{reminder_id}", json={"status": "ACTIVE"})
+    assert invalid_response.status_code == 409
+    assert "Invalid reminder status transition: COMPLETED -> ACTIVE" in invalid_response.json()["detail"]
+
+
+def test_patch_reminder_accepts_idempotent_status_update(client):
+    due_at = (datetime.now(timezone.utc) + timedelta(days=1)).isoformat()
+    create_response = client.post("/api/v1/reminders", json={"title": "Idempotent status item", "due_at": due_at})
+    reminder_id = create_response.json()["id"]
+
+    first_patch = client.patch(f"/api/v1/reminders/{reminder_id}", json={"status": "ACTIVE"})
+    second_patch = client.patch(f"/api/v1/reminders/{reminder_id}", json={"status": "ACTIVE"})
+    assert first_patch.status_code == 200
+    assert second_patch.status_code == 200
+    assert second_patch.json()["status"] == "ACTIVE"

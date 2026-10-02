@@ -27,7 +27,10 @@ def patch_reminder(
     reminder = db.get(Reminder, reminder_id)
     if not reminder or reminder.user_id != user_id:
         raise HTTPException(status_code=404, detail="Reminder not found")
-    return update_reminder(db, reminder, payload)
+    try:
+        return update_reminder(db, reminder, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.delete("/{reminder_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -38,4 +41,3 @@ def delete_reminder(reminder_id: int, db: Session = Depends(get_db), user_id: st
     db.delete(reminder)
     db.commit()
     return None
-

@@ -106,3 +106,40 @@ def test_daily_briefing_delta_compares_today_and_yesterday(client):
     assert body["due_count_delta"] == 1
     assert body["new_active_memories_count"] == 1
     assert body["new_reminders_created_count"] == 4
+
+
+def test_weekly_briefing_returns_empty_by_default(client):
+    response = client.get("/api/v1/briefings/weekly")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["due_this_week_reminders"] == []
+    assert body["due_this_week_count"] == 0
+    assert body["completed_due_this_week_count"] == 0
+    assert body["completion_rate_this_week"] == 0.0
+
+
+def test_weekly_briefing_includes_weekly_counts_and_active_reminders(client):
+    now_local = datetime.now().astimezone()
+    week_start = now_local - timedelta(days=now_local.weekday())
+    due_week_active = (week_start + timedelta(days=1, hours=10)).isoformat()
+    due_week_completed = (week_start + timedelta(days=2, hours=11)).isoformat()
+    due_week_cancelled = (week_start + timedelta(days=3, hours=12)).isoformat()
+    due_next_week = (week_start + timedelta(days=8, hours=9)).isoformat()
+
+    active = client.post("/api/v1/reminders", json={"title": "Week active", "due_at": due_week_active}).json()
+    completed = client.post("/api/v1/reminders", json={"title": "Week completed", "due_at": due_week_completed}).json()
+    cancelled = client.post("/api/v1/reminders", json={"title": "Week cancelled", "due_at": due_week_cancelled}).json()
+    client.post("/api/v1/reminders", json={"title": "Next week", "due_at": due_next_week})
+
+    client.patch(f"/api/v1/reminders/{completed['id']}", json={"status": "COMPLETED"})
+    client.patch(f"/api/v1/reminders/{cancelled['id']}", json={"status": "CANCELLED"})
+
+    response = client.get("/api/v1/briefings/weekly")
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["due_this_week_count"] == 2
+    assert body["completed_due_this_week_count"] == 1
+    assert body["completion_rate_this_week"] == 0.5
+    assert len(body["due_this_week_reminders"]) == 1
+    assert body["due_this_week_reminders"][0]["id"] == active["id"]

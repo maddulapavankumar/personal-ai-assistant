@@ -28,6 +28,9 @@ def create_reminder(db: Session, user_id: str, payload: ReminderCreate) -> Remin
 
 def update_reminder(db: Session, reminder: Reminder, payload: ReminderUpdate) -> Reminder:
     update_values = payload.model_dump(exclude_unset=True)
+    target_status = update_values.get("status")
+    if target_status is not None:
+        validate_reminder_status_transition(current_status=reminder.status, new_status=target_status)
     for key, value in update_values.items():
         setattr(reminder, key, value)
     db.add(reminder)
@@ -60,3 +63,16 @@ def _to_local_due_date(reminder_due_at: datetime, local_now: datetime):
     if reminder_due_at.tzinfo is None:
         reminder_due_at = reminder_due_at.replace(tzinfo=timezone.utc)
     return reminder_due_at.astimezone(local_now.tzinfo).date()
+
+
+def validate_reminder_status_transition(current_status: str, new_status: str) -> None:
+    if current_status == new_status:
+        return
+    allowed_transitions = {
+        "ACTIVE": {"COMPLETED", "CANCELLED"},
+        "COMPLETED": set(),
+        "CANCELLED": set(),
+    }
+    allowed = allowed_transitions.get(current_status)
+    if allowed is None or new_status not in allowed:
+        raise ValueError(f"Invalid reminder status transition: {current_status} -> {new_status}")

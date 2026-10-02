@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from app.models.reminder import Reminder
 from app.models.reminder_audit_event import ReminderAuditEvent
 
@@ -214,3 +216,85 @@ def test_chat_update_reminder_command_supports_title_with_at_phrase(client, db_s
 
     reminder = db_session.query(Reminder).filter(Reminder.id == reminder_id).one()
     assert reminder.title == "pick up groceries at market"
+
+
+def test_chat_show_reminders_returns_active_reminders(client, db_session):
+    now_local = datetime.now().astimezone()
+    first_due = (now_local + timedelta(hours=1)).isoformat()
+    second_due = (now_local + timedelta(hours=2)).isoformat()
+    client.post("/api/v1/reminders", json={"title": "Pay rent", "due_at": second_due})
+    client.post("/api/v1/reminders", json={"title": "Call bank", "due_at": first_due})
+
+    response = client.post("/api/v1/chat", json={"message": "show reminders"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["action"] == "query_reminders"
+    assert body["actions"][0]["status"] == "executed"
+    assert body["actions"][0]["rule_id"] == "chat_show_reminders_v1"
+    assert "Active reminders:" in body["reply"]
+    assert "- #" in body["reply"]
+    assert body["reply"].index("Call bank") < body["reply"].index("Pay rent")
+    assert db_session.query(ReminderAuditEvent).count() == 0
+
+
+def test_chat_show_reminders_due_today_filters_by_local_day(client):
+    now_local = datetime.now().astimezone()
+    today_due = now_local.replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
+    tomorrow_due = (now_local + timedelta(days=1)).replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
+    client.post("/api/v1/reminders", json={"title": "Today reminder", "due_at": today_due})
+    client.post("/api/v1/reminders", json={"title": "Tomorrow reminder", "due_at": tomorrow_due})
+
+    response = client.post("/api/v1/chat", json={"message": "show reminders due today"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["rule_id"] == "chat_show_reminders_due_today_v1"
+    assert "Active reminders due today:" in body["reply"]
+    assert "Today reminder" in body["reply"]
+    assert "Tomorrow reminder" not in body["reply"]
+
+
+def test_chat_show_reminders_due_this_week_filters_by_local_week(client):
+    now_local = datetime.now().astimezone()
+    start_of_week = now_local - timedelta(days=now_local.weekday())
+    this_week_due = (start_of_week + timedelta(days=2, hours=1)).isoformat()
+    next_week_due = (start_of_week + timedelta(days=8, hours=1)).isoformat()
+    client.post("/api/v1/reminders", json={"title": "This week reminder", "due_at": this_week_due})
+    client.post("/api/v1/reminders", json={"title": "Next week reminder", "due_at": next_week_due})
+
+    response = client.post("/api/v1/chat", json={"message": "show reminders due this week"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["rule_id"] == "chat_show_reminders_due_this_week_v1"
+    assert "Active reminders due this week:" in body["reply"]
+    assert "This week reminder" in body["reply"]
+    assert "Next week reminder" not in body["reply"]
+
+
+def test_chat_show_reminders_due_this_week_handles_naive_due_at_without_error(client, db_session):
+    now_local = datetime.now().astimezone()
+    start_of_week = now_local - timedelta(days=now_local.weekday())
+    reminder = Reminder(
+        user_id="default-user",
+        title="Naive local reminder",
+        notes="",
+        due_at=(start_of_week + timedelta(days=3, hours=2)).replace(tzinfo=None),
+        recurrence_rule=None,
+        status="ACTIVE",
+    )
+    db_session.add(reminder)
+    db_session.commit()
+
+    response = client.post("/api/v1/chat", json={"message": "show reminders due this week"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["status"] == "executed"
+    assert "Naive local reminder" in body["reply"]
+
+
+def test_chat_invalid_show_reminders_command_returns_invalid(client):
+    response = client.post("/api/v1/chat", json={"message": "show reminders tomorrow"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["action"] == "query_reminders"
+    assert body["actions"][0]["status"] == "invalid"
+    assert "Invalid reminder query command." in body["reply"]

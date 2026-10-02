@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -32,3 +34,29 @@ def update_reminder(db: Session, reminder: Reminder, payload: ReminderUpdate) ->
     db.commit()
     db.refresh(reminder)
     return reminder
+
+
+def list_reminders_for_query(db: Session, user_id: str, query_scope: str) -> list[Reminder]:
+    reminders = list_reminders(db=db, user_id=user_id)
+    active_reminders = [reminder for reminder in reminders if reminder.status == "ACTIVE"]
+    if query_scope == "all":
+        return active_reminders
+
+    now_local = datetime.now().astimezone()
+    local_due_date_by_id = {reminder.id: _to_local_due_date(reminder_due_at=reminder.due_at, local_now=now_local) for reminder in active_reminders}
+    if query_scope == "today":
+        return [reminder for reminder in active_reminders if local_due_date_by_id[reminder.id] == now_local.date()]
+
+    week_start_date = (now_local - timedelta(days=now_local.weekday())).date()
+    week_end_date = week_start_date + timedelta(days=6)
+    return [
+        reminder
+        for reminder in active_reminders
+        if week_start_date <= local_due_date_by_id[reminder.id] <= week_end_date
+    ]
+
+
+def _to_local_due_date(reminder_due_at: datetime, local_now: datetime):
+    if reminder_due_at.tzinfo is None:
+        reminder_due_at = reminder_due_at.replace(tzinfo=timezone.utc)
+    return reminder_due_at.astimezone(local_now.tzinfo).date()

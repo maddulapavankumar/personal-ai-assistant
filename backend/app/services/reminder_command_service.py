@@ -11,9 +11,15 @@ from app.services.reminder_service import create_reminder, get_reminder, update_
 REMINDER_CREATE_RULE_ID = "chat_remind_me_iso_v1"
 REMINDER_UPDATE_RULE_ID = "chat_update_reminder_id_iso_v1"
 REMINDER_CANCEL_RULE_ID = "chat_cancel_reminder_id_v1"
+REMINDER_QUERY_ALL_RULE_ID = "chat_show_reminders_v1"
+REMINDER_QUERY_DUE_TODAY_RULE_ID = "chat_show_reminders_due_today_v1"
+REMINDER_QUERY_DUE_WEEK_RULE_ID = "chat_show_reminders_due_this_week_v1"
 REMINDER_CREATE_PREFIX_PATTERN = re.compile(r"^\s*remind me to (?P<body>.+)\s*$", re.IGNORECASE)
 REMINDER_UPDATE_PREFIX_PATTERN = re.compile(r"^\s*update reminder (?P<reminder_id>\d+) title (?P<body>.+)\s*$", re.IGNORECASE)
 REMINDER_CANCEL_PATTERN = re.compile(r"^\s*cancel reminder (?P<reminder_id>\d+)\s*$", re.IGNORECASE)
+REMINDER_QUERY_ALL_PATTERN = re.compile(r"^\s*show reminders\s*$", re.IGNORECASE)
+REMINDER_QUERY_DUE_TODAY_PATTERN = re.compile(r"^\s*show reminders due today\s*$", re.IGNORECASE)
+REMINDER_QUERY_DUE_WEEK_PATTERN = re.compile(r"^\s*show reminders due this week\s*$", re.IGNORECASE)
 
 
 def maybe_process_reminder_command(
@@ -29,6 +35,7 @@ def maybe_process_reminder_command(
         lowered.startswith("remind me to ")
         or lowered.startswith("update reminder ")
         or lowered.startswith("cancel reminder ")
+        or lowered.startswith("show reminders")
     ):
         return None
 
@@ -48,12 +55,44 @@ def maybe_process_reminder_command(
             conversation_id=conversation_id,
             message_id=message_id,
         )
+    if lowered.startswith("show reminders"):
+        return _process_query_reminder_command(message_text=message_text)
     return _process_cancel_reminder_command(
         db=db,
         user_id=user_id,
         message_text=message_text,
         conversation_id=conversation_id,
         message_id=message_id,
+    )
+
+
+def _process_query_reminder_command(message_text: str) -> ChatAction:
+    if REMINDER_QUERY_DUE_TODAY_PATTERN.match(message_text):
+        return ChatAction(
+            action="query_reminders",
+            status="executed",
+            rule_id=REMINDER_QUERY_DUE_TODAY_RULE_ID,
+            reminder_id=None,
+        )
+    if REMINDER_QUERY_DUE_WEEK_PATTERN.match(message_text):
+        return ChatAction(
+            action="query_reminders",
+            status="executed",
+            rule_id=REMINDER_QUERY_DUE_WEEK_RULE_ID,
+            reminder_id=None,
+        )
+    if REMINDER_QUERY_ALL_PATTERN.match(message_text):
+        return ChatAction(
+            action="query_reminders",
+            status="executed",
+            rule_id=REMINDER_QUERY_ALL_RULE_ID,
+            reminder_id=None,
+        )
+    return ChatAction(
+        action="query_reminders",
+        status="invalid",
+        rule_id=REMINDER_QUERY_ALL_RULE_ID,
+        reminder_id=None,
     )
 
 

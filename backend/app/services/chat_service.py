@@ -5,6 +5,12 @@ from sqlalchemy.orm import Session
 from app.models.conversation import Conversation, Message
 from app.schemas.chat import ChatRequest, ChatResponse, MemoryContextItem
 from app.services.memory_service import list_memories
+from app.services.reminder_command_service import (
+    REMINDER_QUERY_ALL_RULE_ID,
+    REMINDER_QUERY_DUE_TODAY_RULE_ID,
+    REMINDER_QUERY_DUE_WEEK_RULE_ID,
+)
+from app.services.reminder_service import list_reminders_for_query
 from app.services.tool_router_service import maybe_extract_memories, maybe_route_chat_actions
 
 MAX_MEMORY_CONTEXT_ITEMS = 3
@@ -78,6 +84,14 @@ def handle_chat_turn(db: Session, user_id: str, payload: ChatRequest) -> ChatRes
             reply = "Reminder cancelled from your chat command."
         elif action.status == "ignored":
             reply = "Reminder not found for that command."
+        elif action.status == "executed" and action.action == "query_reminders":
+            reply = _build_reminder_query_reply(
+                db=db,
+                user_id=user_id,
+                rule_id=action.rule_id,
+            )
+        elif action.status == "invalid" and action.action == "query_reminders":
+            reply = "Invalid reminder query command. Use: show reminders; show reminders due today; show reminders due this week"
         elif action.status == "invalid":
             reply = (
                 "Invalid reminder command. Use: remind me to <title> at <ISO-8601 datetime>; "
@@ -129,3 +143,33 @@ def _build_memory_context(db: Session, user_id: str, message_text: str) -> list[
 def _tokenize_for_matching(text: str) -> set[str]:
     tokens = set(re.findall(r"[a-z0-9]+", text.lower()))
     return {token for token in tokens if len(token) >= 3 and token not in GENERIC_TOKENS}
+
+
+def _build_reminder_query_reply(db: Session, user_id: str, rule_id: str) -> str:
+    scope_by_rule = {
+        REMINDER_QUERY_ALL_RULE_ID: "all",
+        REMINDER_QUERY_DUE_TODAY_RULE_ID: "today",
+        REMINDER_QUERY_DUE_WEEK_RULE_ID: "this_week",
+    }
+    scope = scope_by_rule.get(rule_id)
+    if scope is None:
+        return "Invalid reminder query command. Use: show reminders; show reminders due today; show reminders due this week"
+
+    reminders = list_reminders_for_query(db=db, user_id=user_id, query_scope=scope)
+    if not reminders:
+        if scope == "all":
+            return "No active reminders found."
+        if scope == "today":
+            return "No active reminders due today."
+        return "No active reminders due this week."
+
+    title = "Active reminders:"
+    if scope == "today":
+        title = "Active reminders due today:"
+    elif scope == "this_week":
+        title = "Active reminders due this week:"
+
+    lines = [title]
+    for reminder in reminders:
+        lines.append(f"- #{reminder.id} {reminder.title} at {reminder.due_at.isoformat()}")
+    return "\n".join(lines)

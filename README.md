@@ -96,6 +96,8 @@ Deterministic chat reminder command:
 - `show daily briefing`
 - `what changed since yesterday`
 - `show daily delta`
+- `show reminder completion stats`
+- `show reminder stats`
 - Example: `remind me to pay rent at 2026-10-05T09:00:00Z`
 - Example: `update reminder 12 title pay internet bill at 2026-10-06T08:30:00Z`
 - Example: `cancel reminder 12`
@@ -112,6 +114,7 @@ Daily briefing v1:
 - includes reminders due today (local server date), top 3 ACTIVE memories, and routine suggestions
 - top memories are sorted by importance (desc), confidence (desc), updated_at (desc), then id (asc)
 - `GET /api/v1/briefings/daily-delta` returns deterministic day-over-day counts (today vs yesterday), including due reminder delta and new item counts
+- `GET /api/v1/briefings/reminder-completion-stats` returns deterministic reminder completion counts/rates for today and current week (CANCELLED reminders excluded)
 
 ## Recommended milestone flow (Copilot Agents)
 
@@ -160,6 +163,7 @@ After pushing, configure branch protection for `main` per:
 - Milestone 2B Step 13 (reminder query commands): merged to `main` via PR #12.
 - Milestone 2B Step 14 (routine suggestions v1): merged to `main` via PR #13.
 - Milestone 2C Step 15 (daily briefing endpoint): merged to `main` via PR #14.
+- Milestone 2C Steps 16-18 (briefing chat commands + daily delta): merged to `main` via PR #15.
 
 Recommended immediate sequence:
 

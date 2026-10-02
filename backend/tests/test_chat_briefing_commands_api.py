@@ -38,3 +38,21 @@ def test_chat_daily_delta_command_returns_delta_summary(client):
     assert "Due reminders today:" in body["reply"]
     assert "Due reminders yesterday:" in body["reply"]
     assert "Due reminder delta:" in body["reply"]
+
+
+def test_chat_reminder_completion_stats_command_returns_summary(client):
+    now_local = datetime.now().astimezone()
+    due_today = now_local.replace(hour=14, minute=0, second=0, microsecond=0).isoformat()
+    due_today_completed = now_local.replace(hour=16, minute=0, second=0, microsecond=0).isoformat()
+    client.post("/api/v1/reminders", json={"title": "Active item", "due_at": due_today})
+    completed = client.post("/api/v1/reminders", json={"title": "Completed item", "due_at": due_today_completed}).json()
+    client.patch(f"/api/v1/reminders/{completed['id']}", json={"status": "COMPLETED"})
+
+    response = client.post("/api/v1/chat", json={"message": "show reminder completion stats"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["action"] == "query_reminder_completion_stats"
+    assert body["actions"][0]["rule_id"] == "chat_reminder_completion_stats_v1"
+    assert f"Reminder completion stats for {now_local.date().isoformat()}" in body["reply"]
+    assert "Completion rate today:" in body["reply"]
+    assert "Completion rate this week:" in body["reply"]

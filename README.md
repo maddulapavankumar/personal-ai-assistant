@@ -126,6 +126,8 @@ After pushing, configure branch protection for `main` per:
 - Milestone 1 Step 5 (chat reminder command): merged to `main` via PR #4.
 - Milestone 1 Step 6 (repo process automation): merged to `main` via PR #5.
 - Milestone 1 Step 7 (memory review queue workflow): merged to `main` via PR #6.
+- Milestone 1 Step 8 (memory inspection quality controls): merged to `main` via PR #7.
+- Milestone 1 Step 9 (deterministic reminder update/cancel lifecycle): merged to `main` via PR #8.
 
 Recommended immediate sequence:
 

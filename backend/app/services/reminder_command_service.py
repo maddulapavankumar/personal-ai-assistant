@@ -11,12 +11,14 @@ from app.services.reminder_service import create_reminder, get_reminder, update_
 REMINDER_CREATE_RULE_ID = "chat_remind_me_iso_v1"
 REMINDER_UPDATE_RULE_ID = "chat_update_reminder_id_iso_v1"
 REMINDER_CANCEL_RULE_ID = "chat_cancel_reminder_id_v1"
+REMINDER_COMPLETE_RULE_ID = "chat_complete_reminder_id_v1"
 REMINDER_QUERY_ALL_RULE_ID = "chat_show_reminders_v1"
 REMINDER_QUERY_DUE_TODAY_RULE_ID = "chat_show_reminders_due_today_v1"
 REMINDER_QUERY_DUE_WEEK_RULE_ID = "chat_show_reminders_due_this_week_v1"
 REMINDER_CREATE_PREFIX_PATTERN = re.compile(r"^\s*remind me to (?P<body>.+)\s*$", re.IGNORECASE)
 REMINDER_UPDATE_PREFIX_PATTERN = re.compile(r"^\s*update reminder (?P<reminder_id>\d+) title (?P<body>.+)\s*$", re.IGNORECASE)
 REMINDER_CANCEL_PATTERN = re.compile(r"^\s*cancel reminder (?P<reminder_id>\d+)\s*$", re.IGNORECASE)
+REMINDER_COMPLETE_PATTERN = re.compile(r"^\s*complete reminder (?P<reminder_id>\d+)\s*$", re.IGNORECASE)
 REMINDER_QUERY_ALL_PATTERN = re.compile(r"^\s*show reminders\s*$", re.IGNORECASE)
 REMINDER_QUERY_DUE_TODAY_PATTERN = re.compile(r"^\s*show reminders due today\s*$", re.IGNORECASE)
 REMINDER_QUERY_DUE_WEEK_PATTERN = re.compile(r"^\s*show reminders due this week\s*$", re.IGNORECASE)
@@ -35,6 +37,7 @@ def maybe_process_reminder_command(
         lowered.startswith("remind me to ")
         or lowered.startswith("update reminder ")
         or lowered.startswith("cancel reminder ")
+        or lowered.startswith("complete reminder ")
         or lowered.startswith("show reminders")
     ):
         return None
@@ -57,6 +60,14 @@ def maybe_process_reminder_command(
         )
     if lowered.startswith("show reminders"):
         return _process_query_reminder_command(message_text=message_text)
+    if lowered.startswith("complete reminder "):
+        return _process_complete_reminder_command(
+            db=db,
+            user_id=user_id,
+            message_text=message_text,
+            conversation_id=conversation_id,
+            message_id=message_id,
+        )
     return _process_cancel_reminder_command(
         db=db,
         user_id=user_id,
@@ -283,6 +294,57 @@ def _process_cancel_reminder_command(
         payload_json={"action": "cancel_reminder", "status": "executed"},
     )
     return ChatAction(action="cancel_reminder", status="executed", rule_id=REMINDER_CANCEL_RULE_ID, reminder_id=updated.id)
+
+
+def _process_complete_reminder_command(
+    db: Session,
+    user_id: str,
+    message_text: str,
+    conversation_id: int,
+    message_id: int,
+) -> ChatAction:
+    match = REMINDER_COMPLETE_PATTERN.match(message_text)
+    if not match:
+        return _invalid_action_with_audit(
+            db=db,
+            user_id=user_id,
+            action="complete_reminder",
+            rule_id=REMINDER_COMPLETE_RULE_ID,
+            reminder_id=None,
+            conversation_id=conversation_id,
+            message_id=message_id,
+            message_text=message_text,
+        )
+    reminder_id = int(match.group("reminder_id"))
+    reminder = get_reminder(db=db, user_id=user_id, reminder_id=reminder_id)
+    if not reminder:
+        _create_audit_event(
+            db=db,
+            user_id=user_id,
+            rule_id=REMINDER_COMPLETE_RULE_ID,
+            reminder_id=None,
+            conversation_id=conversation_id,
+            message_id=message_id,
+            payload_json={
+                "action": "complete_reminder",
+                "status": "ignored",
+                "reason": "reminder_not_found",
+                "requested_reminder_id": reminder_id,
+            },
+        )
+        return ChatAction(action="complete_reminder", status="ignored", rule_id=REMINDER_COMPLETE_RULE_ID, reminder_id=reminder_id)
+
+    updated = update_reminder(db=db, reminder=reminder, payload=ReminderUpdate(status="COMPLETED"))
+    _create_audit_event(
+        db=db,
+        user_id=user_id,
+        rule_id=REMINDER_COMPLETE_RULE_ID,
+        reminder_id=updated.id,
+        conversation_id=conversation_id,
+        message_id=message_id,
+        payload_json={"action": "complete_reminder", "status": "executed"},
+    )
+    return ChatAction(action="complete_reminder", status="executed", rule_id=REMINDER_COMPLETE_RULE_ID, reminder_id=updated.id)
 
 
 def _parse_iso_datetime(value: str) -> datetime | None:

@@ -127,6 +127,34 @@ def test_chat_cancel_reminder_command_cancels_existing_reminder_and_writes_audit
     assert events[1].payload_json["status"] == "executed"
 
 
+def test_chat_complete_reminder_command_completes_existing_reminder_and_writes_audit(client, db_session):
+    create_response = client.post(
+        "/api/v1/chat",
+        json={"message": "remind me to submit report at 2026-10-05T09:00:00Z"},
+    )
+    reminder_id = create_response.json()["actions"][0]["reminder_id"]
+
+    complete_response = client.post(
+        "/api/v1/chat",
+        json={"message": f"complete reminder {reminder_id}"},
+    )
+    assert complete_response.status_code == 200
+    body = complete_response.json()
+    assert body["actions"][0]["action"] == "complete_reminder"
+    assert body["actions"][0]["status"] == "executed"
+    assert body["actions"][0]["rule_id"] == "chat_complete_reminder_id_v1"
+    assert "Reminder marked completed" in body["reply"]
+
+    reminder = db_session.query(Reminder).filter(Reminder.id == reminder_id).one()
+    assert reminder.status == "COMPLETED"
+
+    events = db_session.query(ReminderAuditEvent).order_by(ReminderAuditEvent.id.asc()).all()
+    assert len(events) == 2
+    assert events[1].rule_id == "chat_complete_reminder_id_v1"
+    assert events[1].payload_json["action"] == "complete_reminder"
+    assert events[1].payload_json["status"] == "executed"
+
+
 def test_chat_update_reminder_command_returns_ignored_when_missing_reminder(client, db_session):
     response = client.post(
         "/api/v1/chat",
@@ -164,6 +192,27 @@ def test_chat_cancel_reminder_command_returns_ignored_when_missing_reminder(clie
     assert len(events) == 1
     assert events[0].reminder_id is None
     assert events[0].payload_json["action"] == "cancel_reminder"
+    assert events[0].payload_json["status"] == "ignored"
+    assert events[0].payload_json["reason"] == "reminder_not_found"
+    assert events[0].payload_json["requested_reminder_id"] == 999
+
+
+def test_chat_complete_reminder_command_returns_ignored_when_missing_reminder(client, db_session):
+    response = client.post(
+        "/api/v1/chat",
+        json={"message": "complete reminder 999"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["action"] == "complete_reminder"
+    assert body["actions"][0]["status"] == "ignored"
+    assert body["actions"][0]["rule_id"] == "chat_complete_reminder_id_v1"
+    assert "Reminder not found" in body["reply"]
+
+    events = db_session.query(ReminderAuditEvent).all()
+    assert len(events) == 1
+    assert events[0].reminder_id is None
+    assert events[0].payload_json["action"] == "complete_reminder"
     assert events[0].payload_json["status"] == "ignored"
     assert events[0].payload_json["reason"] == "reminder_not_found"
     assert events[0].payload_json["requested_reminder_id"] == 999

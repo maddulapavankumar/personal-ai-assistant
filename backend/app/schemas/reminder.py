@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -15,7 +16,7 @@ class ReminderUpdate(BaseModel):
     notes: str | None = None
     due_at: datetime | None = None
     recurrence_rule: str | None = Field(default=None, max_length=128)
-    status: str | None = Field(default=None, min_length=2, max_length=32)
+    status: Literal["ACTIVE", "COMPLETED", "CANCELLED"] | None = None
 
 
 class ReminderOut(BaseModel):
@@ -30,4 +31,3 @@ class ReminderOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
-

@@ -218,6 +218,23 @@ def test_chat_complete_reminder_command_returns_ignored_when_missing_reminder(cl
     assert events[0].payload_json["requested_reminder_id"] == 999
 
 
+def test_chat_cancel_after_complete_returns_invalid_status_transition(client, db_session):
+    create_response = client.post(
+        "/api/v1/chat",
+        json={"message": "remind me to final task at 2026-10-05T09:00:00Z"},
+    )
+    reminder_id = create_response.json()["actions"][0]["reminder_id"]
+    complete_response = client.post("/api/v1/chat", json={"message": f"complete reminder {reminder_id}"})
+    assert complete_response.status_code == 200
+
+    cancel_response = client.post("/api/v1/chat", json={"message": f"cancel reminder {reminder_id}"})
+    assert cancel_response.status_code == 200
+    body = cancel_response.json()
+    assert body["actions"][0]["action"] == "cancel_reminder"
+    assert body["actions"][0]["status"] == "invalid"
+    assert body["reply"] == "Invalid reminder status transition for that command."
+
+
 def test_chat_malformed_update_reminder_command_returns_invalid_action(client, db_session):
     response = client.post(
         "/api/v1/chat",

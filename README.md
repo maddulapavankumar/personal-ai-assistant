@@ -99,16 +99,21 @@ Deterministic chat reminder command:
 - `show daily delta`
 - `show reminder completion stats`
 - `show reminder stats`
+- `show weekly briefing`
+- `brief me this week`
+- `what should i do next`
+- `show next actions`
 - Example: `remind me to pay rent at 2026-10-05T09:00:00Z`
 - Example: `update reminder 12 title pay internet bill at 2026-10-06T08:30:00Z`
 - Example: `cancel reminder 12`
 - Example: `complete reminder 12`
-- reminder audit events are appended for create/update/cancel with deterministic status (`executed`, `ignored`, `invalid`)
+- reminder audit events are appended for create/update/cancel/complete with deterministic status (`executed`, `ignored`, `invalid`)
 
 Routine suggestions v1:
 
 - `GET /api/v1/routines/suggestions` returns deterministic, read-only routine suggestions from ACTIVE memories + ACTIVE reminders
 - stable ordering by confidence (desc) then title (asc)
+- `GET /api/v1/routines/next-actions` returns deterministic prioritized next actions based on due ACTIVE reminders and memory review signals
 
 Daily briefing v1:
 
@@ -117,6 +122,7 @@ Daily briefing v1:
 - top memories are sorted by importance (desc), confidence (desc), updated_at (desc), then id (asc)
 - `GET /api/v1/briefings/daily-delta` returns deterministic day-over-day counts (today vs yesterday), including due reminder delta and new item counts
 - `GET /api/v1/briefings/reminder-completion-stats` returns deterministic reminder completion counts/rates for today and current week (CANCELLED reminders excluded)
+- `GET /api/v1/briefings/weekly` returns deterministic weekly briefing data with ACTIVE due reminders, completion counts/rate, top memories, and routine suggestions
 
 ## Recommended milestone flow (Copilot Agents)
 
@@ -166,6 +172,8 @@ After pushing, configure branch protection for `main` per:
 - Milestone 2B Step 14 (routine suggestions v1): merged to `main` via PR #13.
 - Milestone 2C Step 15 (daily briefing endpoint): merged to `main` via PR #14.
 - Milestone 2C Steps 16-18 (briefing chat commands + daily delta): merged to `main` via PR #15.
+- Milestone 3 Step 19 (reminder completion stats endpoint + chat command): merged to `main` via PR #16.
+- Milestone 3 Step 20 (complete reminder chat command): merged to `main` via PR #17.
 
 Recommended immediate sequence:
 

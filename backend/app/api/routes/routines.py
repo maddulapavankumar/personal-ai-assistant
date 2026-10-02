@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_user_id
 from app.db.session import get_db
-from app.schemas.routine import RoutineCandidateOut, RoutineSuggestionOut
-from app.services.routine_service import build_routine_suggestions, list_routine_candidates
+from app.schemas.routine import NextActionOut, RoutineCandidateOut, RoutineSuggestionOut
+from app.services.routine_service import build_next_actions, build_routine_suggestions, list_routine_candidates
 
 router = APIRouter(prefix="/api/v1/routines", tags=["routines"])
 
@@ -17,3 +17,8 @@ def get_routines(db: Session = Depends(get_db), user_id: str = Depends(get_user_
 @router.get("/suggestions", response_model=list[RoutineSuggestionOut])
 def get_routine_suggestions(db: Session = Depends(get_db), user_id: str = Depends(get_user_id)):
     return build_routine_suggestions(db=db, user_id=user_id)
+
+
+@router.get("/next-actions", response_model=list[NextActionOut])
+def get_next_actions(db: Session = Depends(get_db), user_id: str = Depends(get_user_id)):
+    return build_next_actions(db=db, user_id=user_id)

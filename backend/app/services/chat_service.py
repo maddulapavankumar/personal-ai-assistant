@@ -7,20 +7,26 @@ from app.schemas.chat import ChatRequest, ChatResponse, MemoryContextItem
 from app.services.briefing_command_service import (
     BRIEFING_DAILY_DELTA_RULE_ID,
     BRIEFING_DAILY_RULE_ID,
+    NEXT_ACTIONS_RULE_ID,
     REMINDER_COMPLETION_STATS_RULE_ID,
+    WEEKLY_BRIEFING_RULE_ID,
 )
 from app.services.briefing_service import (
     build_daily_briefing_delta_reply,
     build_daily_briefing_reply,
     build_reminder_completion_stats_reply,
+    build_weekly_briefing_reply,
 )
 from app.services.memory_service import list_memories
 from app.services.reminder_command_service import (
+    REMINDER_CANCEL_RULE_ID,
+    REMINDER_COMPLETE_RULE_ID,
     REMINDER_QUERY_ALL_RULE_ID,
     REMINDER_QUERY_DUE_TODAY_RULE_ID,
     REMINDER_QUERY_DUE_WEEK_RULE_ID,
 )
 from app.services.reminder_service import list_reminders_for_query
+from app.services.routine_service import build_next_actions_reply
 from app.services.tool_router_service import maybe_extract_memories, maybe_route_chat_actions
 
 MAX_MEMORY_CONTEXT_ITEMS = 3
@@ -108,16 +114,25 @@ def handle_chat_turn(db: Session, user_id: str, payload: ChatRequest) -> ChatRes
             reply = build_daily_briefing_delta_reply(db=db, user_id=user_id)
         elif action.status == "executed" and action.action == "query_reminder_completion_stats":
             reply = build_reminder_completion_stats_reply(db=db, user_id=user_id)
+        elif action.status == "executed" and action.action == "query_weekly_briefing":
+            reply = build_weekly_briefing_reply(db=db, user_id=user_id)
+        elif action.status == "executed" and action.action == "query_next_actions":
+            reply = build_next_actions_reply(db=db, user_id=user_id)
         elif action.status == "invalid" and action.action == "query_reminders":
             reply = "Invalid reminder query command. Use: show reminders; show reminders due today; show reminders due this week"
+        elif action.status == "invalid" and action.rule_id in {REMINDER_CANCEL_RULE_ID, REMINDER_COMPLETE_RULE_ID}:
+            reply = "Invalid reminder status transition for that command."
         elif action.status == "invalid" and action.rule_id in {
             BRIEFING_DAILY_RULE_ID,
             BRIEFING_DAILY_DELTA_RULE_ID,
             REMINDER_COMPLETION_STATS_RULE_ID,
+            WEEKLY_BRIEFING_RULE_ID,
+            NEXT_ACTIONS_RULE_ID,
         }:
             reply = (
                 "Invalid briefing command. Use: brief me; show daily briefing; "
-                "what changed since yesterday; show daily delta; show reminder completion stats; show reminder stats"
+                "what changed since yesterday; show daily delta; show reminder completion stats; show reminder stats; "
+                "show weekly briefing; brief me this week; what should i do next; show next actions"
             )
         elif action.status == "invalid":
             reply = (

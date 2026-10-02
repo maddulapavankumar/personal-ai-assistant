@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.models.memory import Memory
 from app.models.reminder import Reminder
 from app.models.routine import RoutineCandidate
-from app.schemas.routine import RoutineSuggestionOut
+from app.schemas.routine import NextActionOut, RoutineSuggestionOut
 
 GENERIC_TOKENS = {
     "about",
@@ -106,6 +106,95 @@ def build_routine_suggestions(db: Session, user_id: str) -> list[RoutineSuggesti
         )
 
     return sorted(suggestions, key=lambda item: (-item.confidence, item.title))
+
+
+def build_next_actions(db: Session, user_id: str) -> list[NextActionOut]:
+    actions: list[NextActionOut] = []
+    active_reminders = list(
+        db.scalars(
+            select(Reminder)
+            .where(
+                Reminder.user_id == user_id,
+                Reminder.status == "ACTIVE",
+            )
+            .order_by(Reminder.due_at.asc(), Reminder.id.asc())
+        )
+    )
+    pending_review_memories = list(
+        db.scalars(
+            select(Memory)
+            .where(
+                Memory.user_id == user_id,
+                Memory.status == "PENDING_REVIEW",
+            )
+            .order_by(Memory.updated_at.desc(), Memory.id.asc())
+        )
+    )
+    active_memories = list(
+        db.scalars(
+            select(Memory)
+            .where(
+                Memory.user_id == user_id,
+                Memory.status == "ACTIVE",
+            )
+            .order_by(Memory.updated_at.desc(), Memory.id.asc())
+        )
+    )
+
+    if active_reminders:
+        next_reminder = active_reminders[0]
+        actions.append(
+            NextActionOut(
+                priority=1,
+                title="Complete next due reminder",
+                description=f"Complete reminder #{next_reminder.id} ({next_reminder.title}) due at {next_reminder.due_at.isoformat()}.",
+                source_reminder_id=next_reminder.id,
+                source_memory_id=None,
+            )
+        )
+
+    if pending_review_memories:
+        actions.append(
+            NextActionOut(
+                priority=2,
+                title="Review pending memories",
+                description=f"Review {len(pending_review_memories)} memory item(s) in the review queue.",
+                source_reminder_id=None,
+                source_memory_id=pending_review_memories[0].id,
+            )
+        )
+
+    if active_memories:
+        actions.append(
+            NextActionOut(
+                priority=3,
+                title="Run memory-informed planning review",
+                description="Use your active memories to shape today's reminder priorities.",
+                source_reminder_id=None,
+                source_memory_id=active_memories[0].id,
+            )
+        )
+
+    if not actions:
+        actions.append(
+            NextActionOut(
+                priority=1,
+                title="Create your first reminder",
+                description="Add one reminder to start generating actionable assistant routines.",
+                source_reminder_id=None,
+                source_memory_id=None,
+            )
+        )
+
+    return sorted(actions, key=lambda item: (item.priority, item.title))[:3]
+
+
+def build_next_actions_reply(db: Session, user_id: str) -> str:
+    next_actions = build_next_actions(db=db, user_id=user_id)
+    lines = ["Next best actions:"]
+    for action in next_actions:
+        lines.append(f"- ({action.priority}) {action.title}: {action.description}")
+    return "\n".join(lines)
 
 
 def _find_memory_reminder_overlap(memories: list[Memory], reminders: list[Reminder]) -> tuple[list[int], list[int]]:

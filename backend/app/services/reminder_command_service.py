@@ -283,7 +283,20 @@ def _process_cancel_reminder_command(
         )
         return ChatAction(action="cancel_reminder", status="ignored", rule_id=REMINDER_CANCEL_RULE_ID, reminder_id=reminder_id)
 
-    updated = update_reminder(db=db, reminder=reminder, payload=ReminderUpdate(status="CANCELLED"))
+    try:
+        updated = update_reminder(db=db, reminder=reminder, payload=ReminderUpdate(status="CANCELLED"))
+    except ValueError:
+        return _invalid_action_with_audit(
+            db=db,
+            user_id=user_id,
+            action="cancel_reminder",
+            rule_id=REMINDER_CANCEL_RULE_ID,
+            reminder_id=reminder_id,
+            conversation_id=conversation_id,
+            message_id=message_id,
+            message_text=message_text,
+            requested_reminder_id=reminder_id,
+        )
     _create_audit_event(
         db=db,
         user_id=user_id,
@@ -334,7 +347,20 @@ def _process_complete_reminder_command(
         )
         return ChatAction(action="complete_reminder", status="ignored", rule_id=REMINDER_COMPLETE_RULE_ID, reminder_id=reminder_id)
 
-    updated = update_reminder(db=db, reminder=reminder, payload=ReminderUpdate(status="COMPLETED"))
+    try:
+        updated = update_reminder(db=db, reminder=reminder, payload=ReminderUpdate(status="COMPLETED"))
+    except ValueError:
+        return _invalid_action_with_audit(
+            db=db,
+            user_id=user_id,
+            action="complete_reminder",
+            rule_id=REMINDER_COMPLETE_RULE_ID,
+            reminder_id=reminder_id,
+            conversation_id=conversation_id,
+            message_id=message_id,
+            message_text=message_text,
+            requested_reminder_id=reminder_id,
+        )
     _create_audit_event(
         db=db,
         user_id=user_id,

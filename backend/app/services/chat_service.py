@@ -1,8 +1,38 @@
+import re
+
 from sqlalchemy.orm import Session
 
 from app.models.conversation import Conversation, Message
-from app.schemas.chat import ChatRequest, ChatResponse
+from app.schemas.chat import ChatRequest, ChatResponse, MemoryContextItem
+from app.services.memory_service import list_memories
 from app.services.tool_router_service import maybe_extract_memories, maybe_route_chat_actions
+
+MAX_MEMORY_CONTEXT_ITEMS = 3
+MIN_TOKEN_OVERLAP_FOR_MATCH = 2
+GENERIC_TOKENS = {
+    "about",
+    "assistant",
+    "can",
+    "could",
+    "for",
+    "from",
+    "have",
+    "help",
+    "into",
+    "just",
+    "like",
+    "need",
+    "plan",
+    "please",
+    "reminder",
+    "reminders",
+    "that",
+    "the",
+    "this",
+    "with",
+    "would",
+    "your",
+}
 
 
 def handle_chat_turn(db: Session, user_id: str, payload: ChatRequest) -> ChatResponse:
@@ -57,6 +87,45 @@ def handle_chat_turn(db: Session, user_id: str, payload: ChatRequest) -> ChatRes
     assistant_message = Message(conversation_id=conversation.id, role="assistant", content=reply)
     db.add(assistant_message)
 
+    memory_context = _build_memory_context(
+        db=db,
+        user_id=user_id,
+        message_text=payload.message,
+    )
+
     db.commit()
     db.refresh(conversation)
-    return ChatResponse(conversation_id=conversation.id, reply=reply, actions=actions)
+    return ChatResponse(
+        conversation_id=conversation.id,
+        reply=reply,
+        actions=actions,
+        memory_context=memory_context or None,
+    )
+
+
+def _build_memory_context(db: Session, user_id: str, message_text: str) -> list[MemoryContextItem]:
+    active_memories = list_memories(db=db, user_id=user_id, status="ACTIVE")
+    message_tokens = _tokenize_for_matching(message_text)
+    if not active_memories or not message_tokens:
+        return []
+
+    matched: list[MemoryContextItem] = []
+    for memory in active_memories:
+        memory_tokens = _tokenize_for_matching(memory.content)
+        if len(message_tokens.intersection(memory_tokens)) >= MIN_TOKEN_OVERLAP_FOR_MATCH:
+            matched.append(
+                MemoryContextItem(
+                    id=memory.id,
+                    type=memory.type,
+                    content=memory.content,
+                    importance=memory.importance,
+                )
+            )
+        if len(matched) >= MAX_MEMORY_CONTEXT_ITEMS:
+            break
+    return matched
+
+
+def _tokenize_for_matching(text: str) -> set[str]:
+    tokens = set(re.findall(r"[a-z0-9]+", text.lower()))
+    return {token for token in tokens if len(token) >= 3 and token not in GENERIC_TOKENS}

@@ -16,7 +16,15 @@ class ChatAction(BaseModel):
     reminder_id: int | None = None
 
 
+class MemoryContextItem(BaseModel):
+    id: int
+    type: str
+    content: str
+    importance: float
+
+
 class ChatResponse(BaseModel):
     conversation_id: int
     reply: str
     actions: list[ChatAction] = Field(default_factory=list)
+    memory_context: list[MemoryContextItem] | None = None

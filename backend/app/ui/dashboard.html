@@ -96,6 +96,21 @@
       font-size: 14px;
       line-height: 1.4;
     }
+    .quick-actions {
+      margin-left: 8px;
+      display: inline-flex;
+      gap: 6px;
+      vertical-align: middle;
+    }
+    .quick-action {
+      border: 1px solid #d1d5db;
+      border-radius: 999px;
+      background: #f9fafb;
+      color: #111827;
+      padding: 2px 8px;
+      font-size: 11px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -160,7 +175,7 @@
         "Date: " + data.date + " | Suggestions: " + data.routine_suggestions.length;
       document.getElementById("daily-reminders").innerHTML = listOrNone(
         data.due_reminders_today,
-        function (item) { return "<li>#" + item.id + " " + item.title + " @ " + item.due_at + "</li>"; }
+        function (item) { return renderReminderWithActions(item); }
       );
       document.getElementById("daily-memories").innerHTML = listOrNone(
         data.top_active_memories,
@@ -177,7 +192,17 @@
         " | Completion: " + (data.completion_rate_this_week * 100).toFixed(0) + "%";
       document.getElementById("weekly-reminders").innerHTML = listOrNone(
         data.due_this_week_reminders,
-        function (item) { return "<li>#" + item.id + " " + item.title + " @ " + item.due_at + "</li>"; }
+        function (item) { return renderReminderWithActions(item); }
+      );
+    }
+
+    function renderReminderWithActions(item) {
+      return (
+        "<li>#" + item.id + " " + item.title + " @ " + item.due_at +
+        "<span class=\"quick-actions\">" +
+        "<button class=\"quick-action\" type=\"button\" data-reminder-action=\"complete\" data-reminder-id=\"" + item.id + "\">Complete</button>" +
+        "<button class=\"quick-action\" type=\"button\" data-reminder-action=\"cancel\" data-reminder-id=\"" + item.id + "\">Cancel</button>" +
+        "</span></li>"
       );
     }
 
@@ -214,6 +239,22 @@
         replyEl.innerHTML = "<span class=\"error\">Please enter a message.</span>";
         return;
       }
+
+      async function markReminderStatus(reminderId, action) {
+        const status = action === "complete" ? "COMPLETED" : "CANCELLED";
+        const response = await fetch("/api/v1/reminders/" + reminderId, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: status })
+        });
+        if (!response.ok) throw new Error("Failed to update reminder status");
+        await Promise.all([
+          loadDailyBriefing(),
+          loadWeeklyBriefing(),
+          loadCompletionStats(),
+          loadNextActions()
+        ]);
+      }
       const response = await fetch("/api/v1/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -241,6 +282,19 @@
 
     async function initializeDashboard() {
       wireCommandChips();
+      document.addEventListener("click", async function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const action = target.getAttribute("data-reminder-action");
+        const reminderId = target.getAttribute("data-reminder-id");
+        if (!action || !reminderId) return;
+        try {
+          await markReminderStatus(reminderId, action);
+        } catch (error) {
+          setError("daily-meta", error.message);
+          setError("weekly-meta", error.message);
+        }
+      });
       document.getElementById("chat-send").addEventListener("click", async function () {
         try {
           await sendChatMessage();

@@ -71,6 +71,11 @@ Open the minimal local dashboard:
   - `GET /api/v1/briefings/weekly`
   - `GET /api/v1/briefings/reminder-completion-stats`
   - `GET /api/v1/routines/next-actions`
+- Dashboard includes a minimal chat panel that posts to `POST /api/v1/chat` with helper command chips:
+  - `brief me`
+  - `show weekly briefing`
+  - `show reminder stats`
+  - `show next actions`
 
 Run tests:
 

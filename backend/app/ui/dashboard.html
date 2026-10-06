@@ -54,6 +54,48 @@
       color: #b91c1c;
       font-weight: 600;
     }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .chip {
+      border: 1px solid #d1d5db;
+      border-radius: 999px;
+      background: #f9fafb;
+      color: #111827;
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .chat-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+    .chat-row textarea {
+      min-height: 70px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 8px;
+      font: inherit;
+      resize: vertical;
+    }
+    .chat-row button {
+      border: 0;
+      border-radius: 8px;
+      background: #1f2937;
+      color: #ffffff;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    .chat-reply {
+      margin-top: 10px;
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
@@ -80,6 +122,20 @@
     <section class="card">
       <h2>Next Actions</h2>
       <ul id="next-actions"><li class="meta">Loading...</li></ul>
+    </section>
+    <section class="card">
+      <h2>Chat Assistant</h2>
+      <div class="chips" id="command-chips">
+        <button class="chip" type="button" data-command="brief me">brief me</button>
+        <button class="chip" type="button" data-command="show weekly briefing">show weekly briefing</button>
+        <button class="chip" type="button" data-command="show reminder stats">show reminder stats</button>
+        <button class="chip" type="button" data-command="show next actions">show next actions</button>
+      </div>
+      <div class="chat-row">
+        <textarea id="chat-message" placeholder="Type a deterministic command..."></textarea>
+        <button id="chat-send" type="button">Send</button>
+      </div>
+      <div id="chat-reply" class="chat-reply meta">No chat message sent yet.</div>
     </section>
   </main>
 
@@ -150,7 +206,48 @@
       );
     }
 
+    async function sendChatMessage() {
+      const messageInput = document.getElementById("chat-message");
+      const replyEl = document.getElementById("chat-reply");
+      const message = messageInput.value.trim();
+      if (!message) {
+        replyEl.innerHTML = "<span class=\"error\">Please enter a message.</span>";
+        return;
+      }
+      const response = await fetch("/api/v1/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: message })
+      });
+      if (!response.ok) throw new Error("Failed to send chat message");
+      const data = await response.json();
+      replyEl.textContent = data.reply;
+      await Promise.all([
+        loadDailyBriefing(),
+        loadWeeklyBriefing(),
+        loadCompletionStats(),
+        loadNextActions()
+      ]);
+    }
+
+    function wireCommandChips() {
+      const chips = document.querySelectorAll("#command-chips .chip");
+      chips.forEach(function (chip) {
+        chip.addEventListener("click", function () {
+          document.getElementById("chat-message").value = chip.getAttribute("data-command");
+        });
+      });
+    }
+
     async function initializeDashboard() {
+      wireCommandChips();
+      document.getElementById("chat-send").addEventListener("click", async function () {
+        try {
+          await sendChatMessage();
+        } catch (error) {
+          setError("chat-reply", error.message);
+        }
+      });
       try {
         await Promise.all([
           loadDailyBriefing(),

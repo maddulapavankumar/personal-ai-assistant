@@ -139,6 +139,11 @@
       <ul id="next-actions"><li class="meta">Loading...</li></ul>
     </section>
     <section class="card">
+      <h2>Memory Review Queue</h2>
+      <div id="review-queue-meta" class="meta">Loading...</div>
+      <ul id="review-queue"><li class="meta">Loading...</li></ul>
+    </section>
+    <section class="card">
       <h2>Chat Assistant</h2>
       <div class="chips" id="command-chips">
         <button class="chip" type="button" data-command="brief me">brief me</button>
@@ -231,6 +236,38 @@
       );
     }
 
+    function renderMemoryReviewItem(item) {
+      return (
+        "<li>#[" + item.id + "] " + item.type + " — " + item.content +
+        "<span class=\"quick-actions\">" +
+        "<button class=\"quick-action\" type=\"button\" data-memory-review-action=\"approve\" data-memory-id=\"" + item.id + "\">Approve</button>" +
+        "<button class=\"quick-action\" type=\"button\" data-memory-review-action=\"reject\" data-memory-id=\"" + item.id + "\">Reject</button>" +
+        "</span></li>"
+      );
+    }
+
+    async function loadReviewQueue() {
+      const response = await fetch("/api/v1/memories/review-queue");
+      if (!response.ok) throw new Error("Failed to load memory review queue");
+      const data = await response.json();
+      document.getElementById("review-queue-meta").textContent = "Pending: " + data.length;
+      document.getElementById("review-queue").innerHTML = listOrNone(
+        data,
+        renderMemoryReviewItem
+      );
+    }
+
+    async function reviewMemory(memoryId, decision) {
+      const reason = decision === "approve" ? "Approved via dashboard review" : "Rejected via dashboard review";
+      const response = await fetch("/api/v1/memories/" + memoryId + "/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision: decision, reason: reason })
+      });
+      if (!response.ok) throw new Error("Failed to review memory");
+      await loadReviewQueue();
+    }
+
     async function sendChatMessage() {
       const messageInput = document.getElementById("chat-message");
       const replyEl = document.getElementById("chat-reply");
@@ -285,14 +322,27 @@
       document.addEventListener("click", async function (event) {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
-        const action = target.getAttribute("data-reminder-action");
+
+        const reminderAction = target.getAttribute("data-reminder-action");
         const reminderId = target.getAttribute("data-reminder-id");
-        if (!action || !reminderId) return;
-        try {
-          await markReminderStatus(reminderId, action);
-        } catch (error) {
-          setError("daily-meta", error.message);
-          setError("weekly-meta", error.message);
+        if (reminderAction && reminderId) {
+          try {
+            await markReminderStatus(reminderId, reminderAction);
+          } catch (error) {
+            setError("daily-meta", error.message);
+            setError("weekly-meta", error.message);
+          }
+          return;
+        }
+
+        const reviewAction = target.getAttribute("data-memory-review-action");
+        const memoryId = target.getAttribute("data-memory-id");
+        if (reviewAction && memoryId) {
+          try {
+            await reviewMemory(memoryId, reviewAction);
+          } catch (error) {
+            setError("review-queue-meta", error.message);
+          }
         }
       });
       document.getElementById("chat-send").addEventListener("click", async function () {
@@ -307,13 +357,15 @@
           loadDailyBriefing(),
           loadWeeklyBriefing(),
           loadCompletionStats(),
-          loadNextActions()
+          loadNextActions(),
+          loadReviewQueue()
         ]);
       } catch (error) {
         setError("daily-meta", error.message);
         setError("weekly-meta", error.message);
         setError("stats-meta", error.message);
         setError("next-actions", error.message);
+        setError("review-queue-meta", error.message);
       }
     }
 

@@ -191,6 +191,8 @@ After pushing, configure branch protection for `main` per:
 - Milestone 2C Steps 16-18 (briefing chat commands + daily delta): merged to `main` via PR #15.
 - Milestone 3 Step 19 (reminder completion stats endpoint + chat command): merged to `main` via PR #16.
 - Milestone 3 Step 20 (complete reminder chat command): merged to `main` via PR #17.
+- Milestone 4 Step 21-26 (dashboard, chat panel, quick reminder actions): merged to `main` via PR #21.
+- Next approved slice: dashboard memory review queue for approving or rejecting pending memories directly from the dashboard.
 
 Recommended immediate sequence:
 

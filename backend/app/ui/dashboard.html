@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Personal AI Assistant Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    body {
+      margin: 0;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+    header {
+      padding: 16px 20px;
+      background: #111827;
+      color: #ffffff;
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+    ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+    .meta {
+      font-size: 13px;
+      color: #4b5563;
+    }
+    .error {
+      color: #b91c1c;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Personal AI Assistant Dashboard</h1>
+  </header>
+  <main>
+    <section class="card">
+      <h2>Daily Briefing</h2>
+      <div id="daily-meta" class="meta">Loading...</div>
+      <ul id="daily-reminders"></ul>
+      <ul id="daily-memories"></ul>
+    </section>
+    <section class="card">
+      <h2>Weekly Briefing</h2>
+      <div id="weekly-meta" class="meta">Loading...</div>
+      <ul id="weekly-reminders"></ul>
+    </section>
+    <section class="card">
+      <h2>Reminder Completion Stats</h2>
+      <div id="stats-meta" class="meta">Loading...</div>
+      <ul id="stats-values"></ul>
+    </section>
+    <section class="card">
+      <h2>Next Actions</h2>
+      <ul id="next-actions"><li class="meta">Loading...</li></ul>
+    </section>
+  </main>
+
+  <script>
+    function setError(elementId, message) {
+      const el = document.getElementById(elementId);
+      el.innerHTML = "<span class=\"error\">" + message + "</span>";
+    }
+
+    function listOrNone(values, mapItem) {
+      if (!values || values.length === 0) {
+        return "<li class=\"meta\">None</li>";
+      }
+      return values.map(mapItem).join("");
+    }
+
+    async function loadDailyBriefing() {
+      const response = await fetch("/api/v1/briefings/daily");
+      if (!response.ok) throw new Error("Failed to load daily briefing");
+      const data = await response.json();
+      document.getElementById("daily-meta").textContent =
+        "Date: " + data.date + " | Suggestions: " + data.routine_suggestions.length;
+      document.getElementById("daily-reminders").innerHTML = listOrNone(
+        data.due_reminders_today,
+        function (item) { return "<li>#" + item.id + " " + item.title + " @ " + item.due_at + "</li>"; }
+      );
+      document.getElementById("daily-memories").innerHTML = listOrNone(
+        data.top_active_memories,
+        function (item) { return "<li>[" + item.type + "] " + item.content + "</li>"; }
+      );
+    }
+
+    async function loadWeeklyBriefing() {
+      const response = await fetch("/api/v1/briefings/weekly");
+      if (!response.ok) throw new Error("Failed to load weekly briefing");
+      const data = await response.json();
+      document.getElementById("weekly-meta").textContent =
+        "Week: " + data.week_start + " to " + data.week_end +
+        " | Completion: " + (data.completion_rate_this_week * 100).toFixed(0) + "%";
+      document.getElementById("weekly-reminders").innerHTML = listOrNone(
+        data.due_this_week_reminders,
+        function (item) { return "<li>#" + item.id + " " + item.title + " @ " + item.due_at + "</li>"; }
+      );
+    }
+
+    async function loadCompletionStats() {
+      const response = await fetch("/api/v1/briefings/reminder-completion-stats");
+      if (!response.ok) throw new Error("Failed to load reminder completion stats");
+      const data = await response.json();
+      document.getElementById("stats-meta").textContent = "Date: " + data.date;
+      document.getElementById("stats-values").innerHTML = [
+        "<li>Due today: " + data.due_today_count + "</li>",
+        "<li>Completed today: " + data.completed_due_today_count + "</li>",
+        "<li>Today completion: " + (data.completion_rate_today * 100).toFixed(0) + "%</li>",
+        "<li>Due this week: " + data.due_this_week_count + "</li>",
+        "<li>Completed this week: " + data.completed_due_this_week_count + "</li>",
+        "<li>Week completion: " + (data.completion_rate_this_week * 100).toFixed(0) + "%</li>"
+      ].join("");
+    }
+
+    async function loadNextActions() {
+      const response = await fetch("/api/v1/routines/next-actions");
+      if (!response.ok) throw new Error("Failed to load next actions");
+      const data = await response.json();
+      document.getElementById("next-actions").innerHTML = listOrNone(
+        data,
+        function (item) { return "<li>(" + item.priority + ") " + item.title + ": " + item.description + "</li>"; }
+      );
+    }
+
+    async function initializeDashboard() {
+      try {
+        await Promise.all([
+          loadDailyBriefing(),
+          loadWeeklyBriefing(),
+          loadCompletionStats(),
+          loadNextActions()
+        ]);
+      } catch (error) {
+        setError("daily-meta", error.message);
+        setError("weekly-meta", error.message);
+        setError("stats-meta", error.message);
+        setError("next-actions", error.message);
+      }
+    }
+
+    initializeDashboard();
+  </script>
+</body>
+</html>

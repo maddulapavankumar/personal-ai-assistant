@@ -172,6 +172,31 @@
       return values.map(mapItem).join("");
     }
 
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    async function markReminderStatus(reminderId, action) {
+      const status = action === "complete" ? "COMPLETED" : "CANCELLED";
+      const response = await fetch("/api/v1/reminders/" + reminderId, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: status })
+      });
+      if (!response.ok) throw new Error("Failed to update reminder status");
+      await Promise.all([
+        loadDailyBriefing(),
+        loadWeeklyBriefing(),
+        loadCompletionStats(),
+        loadNextActions()
+      ]);
+    }
+
     async function loadDailyBriefing() {
       const response = await fetch("/api/v1/briefings/daily");
       if (!response.ok) throw new Error("Failed to load daily briefing");
@@ -238,10 +263,10 @@
 
     function renderMemoryReviewItem(item) {
       return (
-        "<li>#[" + item.id + "] " + item.type + " — " + item.content +
+        "<li>#" + escapeHtml(item.id) + " " + escapeHtml(item.type) + " — " + escapeHtml(item.content) +
         "<span class=\"quick-actions\">" +
-        "<button class=\"quick-action\" type=\"button\" data-memory-review-action=\"approve\" data-memory-id=\"" + item.id + "\">Approve</button>" +
-        "<button class=\"quick-action\" type=\"button\" data-memory-review-action=\"reject\" data-memory-id=\"" + item.id + "\">Reject</button>" +
+        "<button class=\"quick-action\" type=\"button\" data-memory-review-action=\"approve\" data-memory-id=\"" + escapeHtml(item.id) + "\">Approve</button>" +
+        "<button class=\"quick-action\" type=\"button\" data-memory-review-action=\"reject\" data-memory-id=\"" + escapeHtml(item.id) + "\">Reject</button>" +
         "</span></li>"
       );
     }
@@ -277,21 +302,6 @@
         return;
       }
 
-      async function markReminderStatus(reminderId, action) {
-        const status = action === "complete" ? "COMPLETED" : "CANCELLED";
-        const response = await fetch("/api/v1/reminders/" + reminderId, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: status })
-        });
-        if (!response.ok) throw new Error("Failed to update reminder status");
-        await Promise.all([
-          loadDailyBriefing(),
-          loadWeeklyBriefing(),
-          loadCompletionStats(),
-          loadNextActions()
-        ]);
-      }
       const response = await fetch("/api/v1/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

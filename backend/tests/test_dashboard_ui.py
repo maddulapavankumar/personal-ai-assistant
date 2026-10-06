@@ -8,3 +8,6 @@ def test_dashboard_page_loads(client):
     assert "/api/v1/briefings/weekly" in body
     assert "/api/v1/briefings/reminder-completion-stats" in body
     assert "/api/v1/routines/next-actions" in body
+    assert "/api/v1/chat" in body
+    assert "Chat Assistant" in body
+    assert "show weekly briefing" in body

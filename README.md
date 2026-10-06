@@ -63,6 +63,15 @@ Run the API:
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+Open the minimal local dashboard:
+
+- `http://localhost:8000/dashboard`
+- Dashboard reads deterministic data from:
+  - `GET /api/v1/briefings/daily`
+  - `GET /api/v1/briefings/weekly`
+  - `GET /api/v1/briefings/reminder-completion-stats`
+  - `GET /api/v1/routines/next-actions`
+
 Run tests:
 
 ```powershell

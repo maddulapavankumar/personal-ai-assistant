@@ -76,6 +76,9 @@ Open the minimal local dashboard:
   - `show weekly briefing`
   - `show reminder stats`
   - `show next actions`
+- Dashboard reminder rows include quick actions:
+  - `Complete` -> `PATCH /api/v1/reminders/{id}` with `status=COMPLETED`
+  - `Cancel` -> `PATCH /api/v1/reminders/{id}` with `status=CANCELLED`
 
 Run tests:
 

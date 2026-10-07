@@ -319,6 +319,25 @@ def test_chat_show_reminders_due_today_filters_by_local_day(client):
     assert "Tomorrow reminder" not in body["reply"]
 
 
+def test_chat_show_reminders_due_tomorrow_filters_by_local_day(client):
+    now_local = datetime.now().astimezone()
+    today_due = now_local.replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
+    tomorrow_due = (now_local + timedelta(days=1)).replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
+    next_day_due = (now_local + timedelta(days=2)).replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
+    client.post("/api/v1/reminders", json={"title": "Today reminder", "due_at": today_due})
+    client.post("/api/v1/reminders", json={"title": "Tomorrow reminder", "due_at": tomorrow_due})
+    client.post("/api/v1/reminders", json={"title": "Next day reminder", "due_at": next_day_due})
+
+    response = client.post("/api/v1/chat", json={"message": "show reminders due tomorrow"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["actions"][0]["rule_id"] == "chat_show_reminders_due_tomorrow_v1"
+    assert "Active reminders due tomorrow:" in body["reply"]
+    assert "Tomorrow reminder" in body["reply"]
+    assert "Today reminder" not in body["reply"]
+    assert "Next day reminder" not in body["reply"]
+
+
 def test_chat_show_reminders_due_this_week_filters_by_local_week(client):
     now_local = datetime.now().astimezone()
     start_of_week = now_local - timedelta(days=now_local.weekday())

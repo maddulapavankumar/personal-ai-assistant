@@ -34,3 +34,4 @@ All coding work must follow a milestone contract before implementation starts.
 - Definition-of-done automation should block merge when backend/workflow changes miss required docs updates, while milestone marker checks remain advisory warnings.
 - Review-policy enforcement should treat low-severity findings as advisory while blocking merges on medium/high/critical findings, and the workflow should run this gate before merge approval.
 - Windows developer environments may not expose GitHub CLI on PATH by default; automation and helper scripts must account for the standard install path to avoid false negatives in local validation.
+- When fixing review-policy scripts, keep the required docs updates in the same PR because workflow change categories trigger the definition-of-done gate even when product behavior is otherwise unchanged.

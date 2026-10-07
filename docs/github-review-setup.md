@@ -139,6 +139,8 @@ This gives a practical GitHub-native workflow when a repository owner wants to a
 
 The same rule is also enforced in CI via [.github/workflows/repo-process-guards.yml](../.github/workflows/repo-process-guards.yml), which runs the same review-policy check automatically for every PR targeting `main`.
 
+The local and CI scripts also normalize GitHub CLI PATH handling and make `-IncludeLow` explicitly opt into a stricter low-severity blocking mode. In the default repo policy, low findings remain advisory while medium/high/critical findings block the PR.
+
 ## 6) Repo process automation checks
 
 Workflow: [repo-process-guards.yml](../.github/workflows/repo-process-guards.yml)

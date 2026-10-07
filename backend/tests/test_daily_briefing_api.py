@@ -1,4 +1,13 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+import app.services.reminder_service as reminder_service
+
+
+def test_to_local_due_date_treats_naive_due_at_as_local_time():
+    local_now = datetime(2024, 1, 2, 0, 30, tzinfo=timezone(timedelta(hours=-5)))
+    naive_due_at = datetime(2024, 1, 2, 0, 30)
+
+    assert reminder_service._to_local_due_date(naive_due_at, local_now) == local_now.date()
 
 
 def test_daily_briefing_returns_empty_collections_by_default(client):

@@ -12,6 +12,10 @@ We are intentionally starting small:
 - Memory + reminders as the first core features
 - No voice/smart-home/distributed infra in v1
 
+## Current focus
+
+- Next milestone: timezone/local-time hardening for reminder and briefing bucketing so local-day checks are stable for naive reminder times and local server time boundaries.
+
 ## Project intent for AI agents
 
 The repo is designed to be worked on incrementally and intentionally. Any assistant or Copilot agent should assume the following defaults:

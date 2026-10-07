@@ -35,7 +35,16 @@ function Get-ReviewSeverity {
     return 'unknown'
 }
 
-if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
+$ghCommand = Get-Command gh -ErrorAction SilentlyContinue
+if (-not $ghCommand) {
+    $ghInstallPath = "C:\Program Files\GitHub CLI\gh.exe"
+    if (Test-Path $ghInstallPath) {
+        $env:PATH = "C:\Program Files\GitHub CLI;$env:PATH"
+        $ghCommand = Get-Command gh -ErrorAction SilentlyContinue
+    }
+}
+
+if (-not $ghCommand) {
     Write-Error "GitHub CLI (gh) is not installed or available in PATH. Run: powershell -ExecutionPolicy Bypass -File .\scripts\ensure-gh-path.ps1"
     exit 2
 }

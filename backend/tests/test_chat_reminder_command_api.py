@@ -383,7 +383,6 @@ def test_chat_show_reminders_due_next_7_days_filters_local_window(client):
     assert "Three days out" in body["reply"]
     assert "Ten days out" not in body["reply"]
 
-
 def test_chat_show_reminders_due_this_week_filters_by_local_week(client):
     now_local = datetime.now().astimezone()
     start_of_week = now_local - timedelta(days=now_local.weekday())

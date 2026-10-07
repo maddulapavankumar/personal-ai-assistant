@@ -8,7 +8,7 @@ from app.models.reminder import Reminder
 from app.schemas.briefing import DailyBriefingDeltaOut, DailyBriefingOut, ReminderCompletionStatsOut, WeeklyBriefingOut
 from app.schemas.memory import MemoryOut
 from app.schemas.reminder import ReminderOut
-from app.services.reminder_service import list_reminders_for_query
+from app.services.reminder_service import _to_local_due_date, list_reminders_for_query
 from app.services.routine_service import build_routine_suggestions
 
 
@@ -58,7 +58,7 @@ def build_daily_briefing_delta(db: Session, user_id: str) -> DailyBriefingDeltaO
     due_yesterday_count = 0
     new_reminders_created_count = 0
     for reminder in active_reminders:
-        due_date = _to_local_date(reminder.due_at, now_local)
+        due_date = _to_local_due_date(reminder.due_at, now_local)
         if due_date == today_date:
             due_today_count += 1
         if due_date == yesterday_date:
@@ -127,7 +127,7 @@ def build_weekly_briefing(db: Session, user_id: str) -> WeeklyBriefingOut:
     due_this_week_count = 0
     completed_due_this_week_count = 0
     for reminder in reminders:
-        due_date = _to_local_date(reminder.due_at, now_local)
+        due_date = _to_local_due_date(reminder.due_at, now_local)
         if not (week_start <= due_date <= week_end):
             continue
         if reminder.status == "CANCELLED":
@@ -242,7 +242,7 @@ def build_reminder_completion_stats(db: Session, user_id: str) -> ReminderComple
     for reminder in reminders:
         if reminder.status == "CANCELLED":
             continue
-        due_date = _to_local_date(reminder.due_at, now_local)
+        due_date = _to_local_due_date(reminder.due_at, now_local)
 
         if due_date == today_date:
             due_today_count += 1

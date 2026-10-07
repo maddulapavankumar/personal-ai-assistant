@@ -23,6 +23,7 @@ from app.services.reminder_command_service import (
     REMINDER_COMPLETE_RULE_ID,
     REMINDER_QUERY_ALL_RULE_ID,
     REMINDER_QUERY_DUE_TODAY_RULE_ID,
+    REMINDER_QUERY_DUE_TOMORROW_RULE_ID,
     REMINDER_QUERY_DUE_WEEK_RULE_ID,
 )
 from app.services.reminder_service import list_reminders_for_query
@@ -119,7 +120,7 @@ def handle_chat_turn(db: Session, user_id: str, payload: ChatRequest) -> ChatRes
         elif action.status == "executed" and action.action == "query_next_actions":
             reply = build_next_actions_reply(db=db, user_id=user_id)
         elif action.status == "invalid" and action.action == "query_reminders":
-            reply = "Invalid reminder query command. Use: show reminders; show reminders due today; show reminders due this week"
+            reply = "Invalid reminder query command. Use: show reminders; show reminders due today; show reminders due tomorrow; show reminders due this week"
         elif action.status == "invalid" and action.rule_id in {REMINDER_CANCEL_RULE_ID, REMINDER_COMPLETE_RULE_ID}:
             reply = "Invalid reminder status transition for that command."
         elif action.status == "invalid" and action.rule_id in {
@@ -191,11 +192,12 @@ def _build_reminder_query_reply(db: Session, user_id: str, rule_id: str) -> str:
     scope_by_rule = {
         REMINDER_QUERY_ALL_RULE_ID: "all",
         REMINDER_QUERY_DUE_TODAY_RULE_ID: "today",
+        REMINDER_QUERY_DUE_TOMORROW_RULE_ID: "tomorrow",
         REMINDER_QUERY_DUE_WEEK_RULE_ID: "this_week",
     }
     scope = scope_by_rule.get(rule_id)
     if scope is None:
-        return "Invalid reminder query command. Use: show reminders; show reminders due today; show reminders due this week"
+        return "Invalid reminder query command. Use: show reminders; show reminders due today; show reminders due tomorrow; show reminders due this week"
 
     reminders = list_reminders_for_query(db=db, user_id=user_id, query_scope=scope)
     if not reminders:
@@ -203,11 +205,15 @@ def _build_reminder_query_reply(db: Session, user_id: str, rule_id: str) -> str:
             return "No active reminders found."
         if scope == "today":
             return "No active reminders due today."
+        if scope == "tomorrow":
+            return "No active reminders due tomorrow."
         return "No active reminders due this week."
 
     title = "Active reminders:"
     if scope == "today":
         title = "Active reminders due today:"
+    elif scope == "tomorrow":
+        title = "Active reminders due tomorrow:"
     elif scope == "this_week":
         title = "Active reminders due this week:"
 

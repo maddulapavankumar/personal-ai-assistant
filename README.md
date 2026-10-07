@@ -14,7 +14,7 @@ We are intentionally starting small:
 
 ## Current focus
 
-- Next milestone: timezone/local-time hardening for reminder and briefing bucketing so local-day checks are stable for naive reminder times and local server time boundaries.
+- Next milestone: add explicit reminder query support for `show reminders due tomorrow` and related local-day coverage, keeping the scope confined to reminder queries and deterministic chat behavior.
 
 ## Project intent for AI agents
 

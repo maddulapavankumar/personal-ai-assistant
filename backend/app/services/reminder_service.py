@@ -46,7 +46,7 @@ def list_reminders_for_query(db: Session, user_id: str, query_scope: str) -> lis
         return active_reminders
 
     now_local = datetime.now().astimezone()
-    local_due_date_by_id = {reminder.id: _to_local_due_date(reminder_due_at=reminder.due_at, local_now=now_local) for reminder in active_reminders}
+    local_due_date_by_id = {reminder.id: to_local_due_date(reminder_due_at=reminder.due_at, local_now=now_local) for reminder in active_reminders}
     if query_scope == "today":
         return [reminder for reminder in active_reminders if local_due_date_by_id[reminder.id] == now_local.date()]
 
@@ -59,10 +59,13 @@ def list_reminders_for_query(db: Session, user_id: str, query_scope: str) -> lis
     ]
 
 
-def _to_local_due_date(reminder_due_at: datetime, local_now: datetime):
+def to_local_due_date(reminder_due_at: datetime, local_now: datetime):
     if reminder_due_at.tzinfo is None:
         reminder_due_at = reminder_due_at.replace(tzinfo=local_now.tzinfo)
     return reminder_due_at.astimezone(local_now.tzinfo).date()
+
+
+_to_local_due_date = to_local_due_date
 
 
 def validate_reminder_status_transition(current_status: str, new_status: str) -> None:

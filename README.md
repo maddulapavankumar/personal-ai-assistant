@@ -14,7 +14,7 @@ We are intentionally starting small:
 
 ## Current focus
 
-- Current milestone: add overdue and next-7-day reminder query support while keeping the scope confined to reminder queries and deterministic local-date behavior.
+- Current milestone: surface the reminder query family consistently in the dashboard and docs so the new query commands are discoverable and aligned with the deterministic chat behavior.
 
 ## Project intent for AI agents
 
@@ -128,6 +128,9 @@ Deterministic chat reminder command:
 - `complete reminder <id>`
 - `show reminders`
 - `show reminders due today` (local server time)
+- `show reminders due tomorrow` (local server time)
+- `show reminders overdue` (local server time)
+- `show reminders due next 7 days` (local server time)
 - `show reminders due this week` (local server time)
 - `brief me`
 - `show daily briefing`

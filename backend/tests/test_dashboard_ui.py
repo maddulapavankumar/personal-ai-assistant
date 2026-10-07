@@ -14,6 +14,12 @@ def test_dashboard_page_loads(client):
     assert "Chat Assistant" in body
     assert "Memory Review Queue" in body
     assert "show weekly briefing" in body
+    assert "show reminders" in body
+    assert "show reminders due today" in body
+    assert "show reminders due tomorrow" in body
+    assert "show reminders overdue" in body
+    assert "show reminders due next 7 days" in body
+    assert "show reminders due this week" in body
     assert "Approve" in body
     assert "Reject" in body
     assert "Complete" in body

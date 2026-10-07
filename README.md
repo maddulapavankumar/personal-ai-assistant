@@ -14,7 +14,7 @@ We are intentionally starting small:
 
 ## Current focus
 
-- Next milestone: add explicit reminder query support for `show reminders due tomorrow` and related local-day coverage, keeping the scope confined to reminder queries and deterministic chat behavior.
+- Current milestone: add overdue and next-7-day reminder query support while keeping the scope confined to reminder queries and deterministic local-date behavior.
 
 ## Project intent for AI agents
 

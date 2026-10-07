@@ -32,3 +32,5 @@ All coding work must follow a milestone contract before implementation starts.
 - PR template placeholders must be replaced with concrete evidence before merge; incomplete template text is treated as a process failure.
 - Repository-level automation should enforce PR template compliance as a required check and docs/instruction drift as warning-only initially.
 - Definition-of-done automation should block merge when backend/workflow changes miss required docs updates, while milestone marker checks remain advisory warnings.
+- Review-policy enforcement should treat low-severity findings as advisory while blocking merges on medium/high/critical findings, and the workflow should run this gate before merge approval.
+- Windows developer environments may not expose GitHub CLI on PATH by default; automation and helper scripts must account for the standard install path to avoid false negatives in local validation.

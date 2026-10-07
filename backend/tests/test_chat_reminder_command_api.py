@@ -321,9 +321,14 @@ def test_chat_show_reminders_due_today_filters_by_local_day(client):
 
 def test_chat_show_reminders_due_tomorrow_filters_by_local_day(client):
     now_local = datetime.now().astimezone()
+    current_date = now_local.date()
+    tomorrow_date = current_date + timedelta(days=1)
+    next_day_date = current_date + timedelta(days=2)
+
     today_due = now_local.replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
-    tomorrow_due = (now_local + timedelta(days=1)).replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
-    next_day_due = (now_local + timedelta(days=2)).replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
+    tomorrow_due = datetime.combine(tomorrow_date, datetime.min.time().replace(hour=12)).astimezone().isoformat()
+    next_day_due = datetime.combine(next_day_date, datetime.min.time().replace(hour=12)).astimezone().isoformat()
+
     client.post("/api/v1/reminders", json={"title": "Today reminder", "due_at": today_due})
     client.post("/api/v1/reminders", json={"title": "Tomorrow reminder", "due_at": tomorrow_due})
     client.post("/api/v1/reminders", json={"title": "Next day reminder", "due_at": next_day_due})

@@ -50,7 +50,7 @@ def list_reminders_for_query(db: Session, user_id: str, query_scope: str) -> lis
     if query_scope == "today":
         return [reminder for reminder in active_reminders if local_due_date_by_id[reminder.id] == now_local.date()]
     if query_scope == "tomorrow":
-        tomorrow_date = (now_local + timedelta(days=1)).date()
+        tomorrow_date = (now_local.date() + timedelta(days=1))
         return [reminder for reminder in active_reminders if local_due_date_by_id[reminder.id] == tomorrow_date]
 
     week_start_date = (now_local - timedelta(days=now_local.weekday())).date()

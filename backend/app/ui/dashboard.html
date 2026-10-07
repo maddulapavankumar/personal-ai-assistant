@@ -181,6 +181,26 @@
         .replace(/'/g, "&#039;");
     }
 
+    async function refreshDashboardCards(includeReviewQueue = true) {
+      const refreshTasks = [
+        { elementId: "daily-meta", task: loadDailyBriefing },
+        { elementId: "weekly-meta", task: loadWeeklyBriefing },
+        { elementId: "stats-meta", task: loadCompletionStats },
+        { elementId: "next-actions", task: loadNextActions }
+      ];
+      if (includeReviewQueue) {
+        refreshTasks.push({ elementId: "review-queue-meta", task: loadReviewQueue });
+      }
+
+      await Promise.all(
+        refreshTasks.map(({ elementId, task }) =>
+          task().catch(function (error) {
+            setError(elementId, error.message || String(error));
+          })
+        )
+      );
+    }
+
     async function markReminderStatus(reminderId, action) {
       const status = action === "complete" ? "COMPLETED" : "CANCELLED";
       const response = await fetch("/api/v1/reminders/" + reminderId, {
@@ -189,13 +209,7 @@
         body: JSON.stringify({ status: status })
       });
       if (!response.ok) throw new Error("Failed to update reminder status");
-      await Promise.all([
-        loadDailyBriefing(),
-        loadWeeklyBriefing(),
-        loadCompletionStats(),
-        loadNextActions(),
-        loadReviewQueue()
-      ]);
+      await refreshDashboardCards();
     }
 
     async function loadDailyBriefing() {
@@ -291,7 +305,7 @@
         body: JSON.stringify({ decision: decision, reason: reason })
       });
       if (!response.ok) throw new Error("Failed to review memory");
-      await loadReviewQueue();
+      await refreshDashboardCards();
     }
 
     async function sendChatMessage() {
@@ -311,13 +325,7 @@
       if (!response.ok) throw new Error("Failed to send chat message");
       const data = await response.json();
       replyEl.textContent = data.reply;
-      await Promise.all([
-        loadDailyBriefing(),
-        loadWeeklyBriefing(),
-        loadCompletionStats(),
-        loadNextActions(),
-        loadReviewQueue()
-      ]);
+      await refreshDashboardCards();
     }
 
     function wireCommandChips() {
@@ -365,13 +373,7 @@
         }
       });
       try {
-        await Promise.all([
-          loadDailyBriefing(),
-          loadWeeklyBriefing(),
-          loadCompletionStats(),
-          loadNextActions(),
-          loadReviewQueue()
-        ]);
+        await refreshDashboardCards();
       } catch (error) {
         setError("daily-meta", error.message);
         setError("weekly-meta", error.message);

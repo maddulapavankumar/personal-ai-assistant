@@ -113,6 +113,32 @@ For each PR:
 4. CI green
 5. Merge
 
+## 5a) Low-severity advisory policy for Copilot reviews
+
+GitHub branch protection does not natively support "ignore low severity only". To keep the workflow aligned with your preference, use a helper script before merging:
+
+```powershell
+cd C:\Users\pa1ku\source\repos\personal-ai-assistant
+powershell -ExecutionPolicy Bypass -File .\scripts\check-pr-review-policy.ps1 -PullRequest <number>
+```
+
+Behavior:
+
+- `low` findings are advisory only and do not block merge.
+- `medium`, `high`, and `critical` findings fail the script and block the PR merge.
+- If the PR has no review findings, the script exits successfully.
+- This should be used as a pre-merge gate, alongside CI and reviewer approval.
+
+Example:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\check-pr-review-policy.ps1 -PullRequest 42
+```
+
+This gives a practical GitHub-native workflow when a repository owner wants to allow low-severity findings without permitting medium/high issues to slip through.
+
+The same rule is also enforced in CI via [.github/workflows/repo-process-guards.yml](../.github/workflows/repo-process-guards.yml), which runs the same review-policy check automatically for every PR targeting `main`.
+
 ## 6) Repo process automation checks
 
 Workflow: [repo-process-guards.yml](../.github/workflows/repo-process-guards.yml)

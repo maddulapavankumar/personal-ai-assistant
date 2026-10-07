@@ -13,6 +13,20 @@ Use this workflow for **every milestone** to prevent drift.
    - Checks correctness and scope adherence.
    - Flags risky deviations and missing tests.
 
+## Product intent and non-negotiables
+
+This repository is intentionally constrained. Every AI agent should follow the same intent as the human owner:
+
+- Ship small, vertical slices instead of broad platform features.
+- Favor deterministic, low-cost behavior over speculative or overbuilt AI orchestration.
+- Keep the feature set focused on personal assistant workflows: memory, reminders, daily briefings, routine suggestions, and lightweight UI.
+- Do not add framework, dependency, service, or schema changes without explicit approval.
+- Do not “fix” unrelated code while working on a milestone; stay within the approved files and behavior.
+- If a requirement is ambiguous, stop and ask before changing code or architecture.
+- Treat repository process, docs, and review gates as part of the product, not as optional overhead.
+
+The agent’s job is not to invent a better product; the job is to advance the approved slice while preserving the existing workflow and guardrails.
+
 ## Milestone Contract Template
 
 Before coding, planner must define:

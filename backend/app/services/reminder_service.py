@@ -52,6 +52,17 @@ def list_reminders_for_query(db: Session, user_id: str, query_scope: str) -> lis
     if query_scope == "tomorrow":
         tomorrow_date = (now_local.date() + timedelta(days=1))
         return [reminder for reminder in active_reminders if local_due_date_by_id[reminder.id] == tomorrow_date]
+    if query_scope == "overdue":
+        today_date = now_local.date()
+        return [reminder for reminder in active_reminders if local_due_date_by_id[reminder.id] < today_date]
+    if query_scope == "next_7_days":
+        start_date = now_local.date()
+        end_date = start_date + timedelta(days=6)
+        return [
+            reminder
+            for reminder in active_reminders
+            if start_date <= local_due_date_by_id[reminder.id] <= end_date
+        ]
 
     week_start_date = (now_local - timedelta(days=now_local.weekday())).date()
     week_end_date = week_start_date + timedelta(days=6)

@@ -152,8 +152,14 @@ if ($blocking.Count -gt 0) {
     exit 1
 }
 
-if ($IncludeLow) {
-    Write-Host "Low-severity review findings are allowed because -IncludeLow was requested." -ForegroundColor Yellow
+if ($IncludeLow -and $advisory.Count -gt 0) {
+    Write-Host "Low-severity review findings are being treated as blocking because -IncludeLow was requested." -ForegroundColor Red
+    $advisory | ForEach-Object {
+        Write-Host ("- [{0}] {1} | Resolved={2}" -f $_.Severity.ToUpper(), $_.Author, $_.Resolved)
+        Write-Host $_.Body.Trim()
+        Write-Host ""
+    }
+    exit 1
 }
 
 if ($advisory.Count -gt 0) {

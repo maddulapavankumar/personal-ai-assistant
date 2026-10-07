@@ -153,3 +153,6 @@ Guard behavior:
 - `pr-template-compliance` fails PRs with incomplete template/checklist evidence.
 - `definition-of-done-gate` fails PRs when backend/workflow changes do not include required documentation updates per changed-file mapping rules.
 - `docs-instructions-drift` warns (does not fail) when code changes lack aligned process-doc updates.
+- `review-severity-policy` blocks merges when medium/high/critical findings are present and keeps low findings advisory by default; the helper script also normalizes the Windows GitHub CLI install path before checking reviews.
+
+This safeguard is intentionally strict about review severity but not overbroad: it keeps the repo aligned with the user’s preference for low-severity advisory comments while preventing medium/high concerns from slipping through without a human decision.

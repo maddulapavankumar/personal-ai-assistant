@@ -154,6 +154,27 @@ Detailed prompts and guardrails are in:
 - [docs/agent-workflow.md](./docs/agent-workflow.md)
 - [docs/github-review-setup.md](./docs/github-review-setup.md)
 
+## GitHub CLI + quality gates
+
+Recommended for all future agent-driven work:
+
+```powershell
+cd C:\Users\pa1ku\source\repos\personal-ai-assistant
+powershell -ExecutionPolicy Bypass -File .\scripts\ensure-gh-path.ps1
+gh auth status
+```
+
+Use `gh` for the standard PR lifecycle rather than browser-only flow:
+
+```powershell
+gh pr create --base main --head <branch-name> --title "<clear milestone title>" --body-file .github\pull_request_template.md
+gh pr checks
+gh pr view --comments
+gh pr merge <number> --squash --delete-branch
+```
+
+This keeps the review and merge process easier for agents and assistants to reproduce reliably.
+
 ## GitHub quality gates
 
 This repository includes:

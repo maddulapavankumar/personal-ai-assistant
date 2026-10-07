@@ -87,6 +87,23 @@ Do not broaden scope.
 4. Fixes
 5. Milestone sign-off
 
+## GitHub CLI quickstart for agents
+
+Use the CLI for this repo's normal PR flow so the process is easy for any agent to follow:
+
+```powershell
+cd C:\Users\pa1ku\source\repos\personal-ai-assistant
+powershell -ExecutionPolicy Bypass -File .\scripts\ensure-gh-path.ps1
+gh auth status
+
+gh pr create --base main --head <branch-name> --title "<milestone title>" --body-file .github\pull_request_template.md
+gh pr checks
+gh pr view --comments
+gh pr merge <number> --squash --delete-branch
+```
+
+Use `gh` instead of manual browser PR creation whenever feasible. This reduces tool drift and makes the milestone workflow explicit and reusable for AI agents.
+
 ## PR and handoff checklist
 
 Before requesting merge:

@@ -15,6 +15,8 @@ REMINDER_COMPLETE_RULE_ID = "chat_complete_reminder_id_v1"
 REMINDER_QUERY_ALL_RULE_ID = "chat_show_reminders_v1"
 REMINDER_QUERY_DUE_TODAY_RULE_ID = "chat_show_reminders_due_today_v1"
 REMINDER_QUERY_DUE_TOMORROW_RULE_ID = "chat_show_reminders_due_tomorrow_v1"
+REMINDER_QUERY_DUE_OVERDUE_RULE_ID = "chat_show_reminders_overdue_v1"
+REMINDER_QUERY_DUE_NEXT_7_DAYS_RULE_ID = "chat_show_reminders_due_next_7_days_v1"
 REMINDER_QUERY_DUE_WEEK_RULE_ID = "chat_show_reminders_due_this_week_v1"
 REMINDER_CREATE_PREFIX_PATTERN = re.compile(r"^\s*remind me to (?P<body>.+)\s*$", re.IGNORECASE)
 REMINDER_UPDATE_PREFIX_PATTERN = re.compile(r"^\s*update reminder (?P<reminder_id>\d+) title (?P<body>.+)\s*$", re.IGNORECASE)
@@ -23,6 +25,8 @@ REMINDER_COMPLETE_PATTERN = re.compile(r"^\s*complete reminder (?P<reminder_id>\
 REMINDER_QUERY_ALL_PATTERN = re.compile(r"^\s*show reminders\s*$", re.IGNORECASE)
 REMINDER_QUERY_DUE_TODAY_PATTERN = re.compile(r"^\s*show reminders due today\s*$", re.IGNORECASE)
 REMINDER_QUERY_DUE_TOMORROW_PATTERN = re.compile(r"^\s*show reminders due tomorrow\s*$", re.IGNORECASE)
+REMINDER_QUERY_DUE_OVERDUE_PATTERN = re.compile(r"^\s*show reminders overdue\s*$", re.IGNORECASE)
+REMINDER_QUERY_DUE_NEXT_7_DAYS_PATTERN = re.compile(r"^\s*show reminders due next 7 days\s*$", re.IGNORECASE)
 REMINDER_QUERY_DUE_WEEK_PATTERN = re.compile(r"^\s*show reminders due this week\s*$", re.IGNORECASE)
 
 
@@ -92,6 +96,20 @@ def _process_query_reminder_command(message_text: str) -> ChatAction:
             action="query_reminders",
             status="executed",
             rule_id=REMINDER_QUERY_DUE_TOMORROW_RULE_ID,
+            reminder_id=None,
+        )
+    if REMINDER_QUERY_DUE_OVERDUE_PATTERN.match(message_text):
+        return ChatAction(
+            action="query_reminders",
+            status="executed",
+            rule_id=REMINDER_QUERY_DUE_OVERDUE_RULE_ID,
+            reminder_id=None,
+        )
+    if REMINDER_QUERY_DUE_NEXT_7_DAYS_PATTERN.match(message_text):
+        return ChatAction(
+            action="query_reminders",
+            status="executed",
+            rule_id=REMINDER_QUERY_DUE_NEXT_7_DAYS_RULE_ID,
             reminder_id=None,
         )
     if REMINDER_QUERY_DUE_WEEK_PATTERN.match(message_text):

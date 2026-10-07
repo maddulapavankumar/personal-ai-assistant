@@ -13,7 +13,7 @@ if ($userPath) {
 
 $normalizedUserEntries = @($userEntries | ForEach-Object { $_.TrimEnd('\') })
 if (-not ($normalizedUserEntries -contains $ghDirectoryNormalized)) {
-    $updatedUserPath = ($normalizedUserEntries + $ghDirectoryNormalized) -join ';'
+    $updatedUserPath = @($userEntries + $ghDirectory) -join ';'
     [Environment]::SetEnvironmentVariable('Path', $updatedUserPath, 'User')
     Write-Host "Added GitHub CLI to your user PATH: $ghDirectory"
 }
@@ -21,7 +21,7 @@ if (-not ($normalizedUserEntries -contains $ghDirectoryNormalized)) {
 $currentEntries = @($env:PATH -split ';' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 $normalizedCurrentEntries = @($currentEntries | ForEach-Object { $_.TrimEnd('\') })
 if (-not ($normalizedCurrentEntries -contains $ghDirectoryNormalized)) {
-    $env:PATH = "$ghDirectoryNormalized;$env:PATH"
+    $env:PATH = "$ghDirectory;$env:PATH"
     Write-Host "Updated the current session PATH."
 }
 

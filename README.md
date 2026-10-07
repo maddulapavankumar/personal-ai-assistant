@@ -12,6 +12,21 @@ We are intentionally starting small:
 - Memory + reminders as the first core features
 - No voice/smart-home/distributed infra in v1
 
+## Project intent for AI agents
+
+The repo is designed to be worked on incrementally and intentionally. Any assistant or Copilot agent should assume the following defaults:
+
+- Build only the approved milestone; do not broaden scope.
+- Keep the project low-cost and deterministic; prefer small rule-based logic over expensive or speculative architecture.
+- Treat the assistant as a personal productivity tool, not a broad general-purpose platform.
+- Stop and ask instead of improvising when requirements are unclear, missing, or likely to expand scope.
+- Use the Planner -> Builder -> Reviewer flow for every milestone.
+- Every milestone must define: goal, non-goals, files to change, validation commands, and stop conditions.
+- If a dependency, API contract, or schema change is not explicitly approved, do not add it.
+- Review comments and merge safeguards matter; do not merge on green CI alone when the repo policy requires a review gate.
+
+These guardrails are the product intent for the repository. Future agents should interpret them as the default operating contract.
+
 ## Prerequisites (Windows)
 
 Required:
@@ -153,6 +168,30 @@ Detailed prompts and guardrails are in:
 
 - [docs/agent-workflow.md](./docs/agent-workflow.md)
 - [docs/github-review-setup.md](./docs/github-review-setup.md)
+
+## GitHub CLI + quality gates
+
+Recommended for all future agent-driven work:
+
+```powershell
+cd C:\Users\pa1ku\source\repos\personal-ai-assistant
+powershell -ExecutionPolicy Bypass -File .\scripts\ensure-gh-path.ps1
+gh auth status
+```
+
+Use `gh` for the standard PR lifecycle rather than browser-only flow:
+
+```powershell
+gh pr create --base main --head <branch-name> --title "<clear milestone title>" --body-file .github\pull_request_template.md
+gh pr checks
+gh pr view --comments
+powershell -ExecutionPolicy Bypass -File .\scripts\check-pr-review-policy.ps1 -PullRequest <number>
+gh pr merge <number> --squash --delete-branch
+```
+
+This keeps the review and merge process easier for agents and assistants to reproduce reliably.
+
+For repositories that want `low = advisory` but `medium/high = block`, use the policy gate script before merge. It inspects PR review comments and exits non-zero when a medium/high/critical finding is present.
 
 ## GitHub quality gates
 

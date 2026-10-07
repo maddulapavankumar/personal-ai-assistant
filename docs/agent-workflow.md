@@ -13,6 +13,20 @@ Use this workflow for **every milestone** to prevent drift.
    - Checks correctness and scope adherence.
    - Flags risky deviations and missing tests.
 
+## Product intent and non-negotiables
+
+This repository is intentionally constrained. Every AI agent should follow the same intent as the human owner:
+
+- Ship small, vertical slices instead of broad platform features.
+- Favor deterministic, low-cost behavior over speculative or overbuilt AI orchestration.
+- Keep the feature set focused on personal assistant workflows: memory, reminders, daily briefings, routine suggestions, and lightweight UI.
+- Do not add framework, dependency, service, or schema changes without explicit approval.
+- Do not “fix” unrelated code while working on a milestone; stay within the approved files and behavior.
+- If a requirement is ambiguous, stop and ask before changing code or architecture.
+- Treat repository process, docs, and review gates as part of the product, not as optional overhead.
+
+The agent’s job is not to invent a better product; the job is to advance the approved slice while preserving the existing workflow and guardrails.
+
 ## Milestone Contract Template
 
 Before coding, planner must define:
@@ -86,6 +100,23 @@ Do not broaden scope.
 3. Reviewer findings
 4. Fixes
 5. Milestone sign-off
+
+## GitHub CLI quickstart for agents
+
+Use the CLI for this repo's normal PR flow so the process is easy for any agent to follow:
+
+```powershell
+cd C:\Users\pa1ku\source\repos\personal-ai-assistant
+powershell -ExecutionPolicy Bypass -File .\scripts\ensure-gh-path.ps1
+gh auth status
+
+gh pr create --base main --head <branch-name> --title "<milestone title>" --body-file .github\pull_request_template.md
+gh pr checks
+gh pr view --comments
+gh pr merge <number> --squash --delete-branch
+```
+
+Use `gh` instead of manual browser PR creation whenever feasible. This reduces tool drift and makes the milestone workflow explicit and reusable for AI agents.
 
 ## PR and handoff checklist
 

@@ -30,6 +30,22 @@ jobs:
         run: |
           ./.github/scripts/enforce-definition-of-done.ps1 -BaseSha "${{ github.event.pull_request.base.sha }}" -HeadSha "${{ github.event.pull_request.head.sha }}" -EventPath "${{ github.event_path }}"
 
+  review-severity-policy:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enforce low-advisory vs medium/high block policy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          ./.github/scripts/check-pr-review-policy.ps1 -Owner "${{ github.repository_owner }}" -Repo "${{ github.event.repository.name }}" -PullRequest "${{ github.event.pull_request.number }}"
+
   docs-instructions-drift:
     runs-on: ubuntu-latest
     steps:
